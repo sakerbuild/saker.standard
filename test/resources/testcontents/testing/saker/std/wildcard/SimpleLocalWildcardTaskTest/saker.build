@@ -1,0 +1,6 @@
+build(
+	out roots = test.pathize(std.file.wildcard.local("*:/")),
+	out workdircontents = test.pathize(std.file.wildcard.local(*.txt, Directory: test.local.working.dir())),
+	out builddircontents = test.pathize(std.file.wildcard.local(*.txt, Directory: test.local.build.dir())),
+){
+}

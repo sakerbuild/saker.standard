@@ -1,0 +1,8 @@
+/.saker.project.lock
+/build
+/bin/
+/.classpath
+/test/resources/testbuilds/
+/secret/**
+!/secret/readme.md
+/.project

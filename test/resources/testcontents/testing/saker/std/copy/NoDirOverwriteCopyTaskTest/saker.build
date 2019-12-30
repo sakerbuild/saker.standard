@@ -1,0 +1,12 @@
+betweenexec(out copy) {
+	$copy = std.file.copy(file.txt, Target: dir)
+}
+fromlocal(out copy) {
+	$copy = std.file.copy(std.file.local(testing.local.source()), Target: dir)
+}
+tolocal(out copy) {
+	$copy = std.file.copy(file.txt, Target: std.file.local(testing.local.target()))
+}
+betweenlocal(out copy) {
+	$copy = std.file.copy(std.file.local(testing.local.source()), Target: std.file.local(testing.local.target()))
+}

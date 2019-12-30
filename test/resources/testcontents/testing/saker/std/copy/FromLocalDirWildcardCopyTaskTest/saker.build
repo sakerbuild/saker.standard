@@ -1,0 +1,3 @@
+build(out copy) {
+	$copy = std.file.copy(std.file.local(testing.local.location()), Target: copydir, Wildcard: *.txt)
+}

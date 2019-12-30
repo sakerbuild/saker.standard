@@ -1,0 +1,12 @@
+noparam(
+	out out = std.param.exec()
+){}
+param1(
+	out out = std.param.exec(test.param1)
+){}
+nonexist(
+	out out = std.param.exec(non.existent1)
+){}
+def(
+	out out = std.param.exec(non.existent2, Default: defval)
+){}

@@ -1,0 +1,5 @@
+build(
+	out mirror,
+) {
+	$mirror = std.file.mirror(a.txt)
+}

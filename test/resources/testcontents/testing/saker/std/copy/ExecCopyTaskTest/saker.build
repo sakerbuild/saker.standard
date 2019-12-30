@@ -1,0 +1,3 @@
+build(out copy) {
+	$copy = std.file.copy(file.txt, Target: copied.txt)
+}

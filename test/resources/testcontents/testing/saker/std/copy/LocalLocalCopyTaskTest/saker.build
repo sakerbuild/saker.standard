@@ -1,0 +1,6 @@
+build(out copy) {
+	$copy = std.file.copy(
+		std.file.local(testing.location.source()), 
+		Target: std.file.local(testing.location.target()),
+	)
+}

@@ -1,0 +1,5 @@
+build(
+	out files = test.pathize(std.file.wildcard(*.txt)),
+	out dirfiles = test.pathize(std.file.wildcard(*.txt, Directory: dir)),
+){
+}

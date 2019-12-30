@@ -1,0 +1,6 @@
+builddirout{
+	std.file.put("bd:/outfile.txt", Contents: test.out.contents())
+}
+localout{
+	std.file.put(std.file.local(test.local.path()), Contents: test.out.contents())
+}
