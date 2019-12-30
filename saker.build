@@ -1,4 +1,4 @@
-global(VERSION_saker.standard) = "0.4.2"
+global(VERSION_saker.standard) = "0.8.0"
 
 static(VERSION_saker.build) = nest.dependency.resolve(
 	saker.build,

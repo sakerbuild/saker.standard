@@ -6,3 +6,4 @@
 /secret/**
 !/secret/readme.md
 /.project
+/.saker.build.ideconfigs
