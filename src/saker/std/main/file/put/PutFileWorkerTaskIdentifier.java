@@ -75,7 +75,6 @@ class PutFileWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "[" + (fileLocation != null ? "fileLocation=" + fileLocation : "")
-				+ "]";
+		return getClass().getSimpleName() + "[" + (fileLocation != null ? "fileLocation=" + fileLocation : "") + "]";
 	}
 }

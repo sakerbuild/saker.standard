@@ -21,6 +21,7 @@ import saker.build.task.ParameterizableTask;
 import saker.build.task.TaskContext;
 import saker.build.task.exception.TaskParameterException;
 import saker.build.task.utils.annot.SakerInput;
+import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
@@ -64,7 +65,9 @@ public class LocalFileLocationTaskFactory extends FrontendTaskFactory<FileLocati
 							new TaskParameterException("Path must be absolute: " + path, taskcontext.getTaskId()));
 					return null;
 				}
-				return LocalFileLocation.create(path);
+				LocalFileLocation result = LocalFileLocation.create(path);
+				taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
+				return result;
 			}
 		};
 	}

@@ -38,10 +38,9 @@ import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileLocation;
 import saker.std.api.file.location.FileLocationVisitor;
 import saker.std.api.file.location.LocalFileLocation;
-import saker.std.main.file.property.LocalFileContentDescriptorExecutionProperty;
+import saker.std.impl.file.property.LocalFileContentDescriptorExecutionProperty;
 
-class PutFileWorkerTaskFactory
-		implements TaskFactory<FileLocation>, Task<FileLocation>, Externalizable {
+class PutFileWorkerTaskFactory implements TaskFactory<FileLocation>, Task<FileLocation>, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private FileLocation fileLocation;

@@ -13,22 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package saker.std.main.file.property;
+package saker.std.impl.file.property;
 
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.NavigableSet;
 
+import saker.build.file.content.ContentDescriptor;
 import saker.build.file.path.SakerPath;
 import saker.build.file.provider.LocalFileProvider;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.runtime.execution.ExecutionProperty;
-import saker.build.thirdparty.saker.util.ImmutableUtils;
 
-public class LocalDirectoryRecursiveFilePathsExecutionProperty
-		implements ExecutionProperty<NavigableSet<SakerPath>>, Externalizable {
+public class LocalFileContentDescriptorExecutionProperty
+		implements ExecutionProperty<ContentDescriptor>, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private SakerPath path;
@@ -36,17 +35,22 @@ public class LocalDirectoryRecursiveFilePathsExecutionProperty
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public LocalDirectoryRecursiveFilePathsExecutionProperty() {
+	public LocalFileContentDescriptorExecutionProperty() {
 	}
 
-	public LocalDirectoryRecursiveFilePathsExecutionProperty(SakerPath path) {
+	public LocalFileContentDescriptorExecutionProperty(SakerPath path) {
 		this.path = path;
 	}
 
 	@Override
-	public NavigableSet<SakerPath> getCurrentValue(ExecutionContext executioncontext) throws Exception {
-		return ImmutableUtils.makeImmutableNavigableSet(
-				LocalFileProvider.getInstance().getDirectoryEntriesRecursively(path).navigableKeySet());
+	public ContentDescriptor getCurrentValue(ExecutionContext executioncontext) {
+		try {
+			ContentDescriptor result = executioncontext
+					.getContentDescriptor(LocalFileProvider.getInstance().getPathKey(path));
+			return result;
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	@Override
@@ -75,7 +79,7 @@ public class LocalDirectoryRecursiveFilePathsExecutionProperty
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		LocalDirectoryRecursiveFilePathsExecutionProperty other = (LocalDirectoryRecursiveFilePathsExecutionProperty) obj;
+		LocalFileContentDescriptorExecutionProperty other = (LocalFileContentDescriptorExecutionProperty) obj;
 		if (path == null) {
 			if (other.path != null)
 				return false;
@@ -86,7 +90,7 @@ public class LocalDirectoryRecursiveFilePathsExecutionProperty
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "[" + (path != null ? "path=" + path : "") + "]";
+		return getClass().getSimpleName() + "[path=" + path + "]";
 	}
 
 }

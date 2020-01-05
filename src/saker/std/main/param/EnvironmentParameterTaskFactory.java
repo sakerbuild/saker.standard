@@ -54,7 +54,7 @@ public class EnvironmentParameterTaskFactory extends FrontendTaskFactory<String>
 	private static final long serialVersionUID = 1L;
 
 	public static final String TASK_NAME = "std.param.env";
-	
+
 	@Override
 	public ParameterizableTask<? extends String> createTask(ExecutionContext executioncontext) {
 		return new ParameterizableTask<String>() {

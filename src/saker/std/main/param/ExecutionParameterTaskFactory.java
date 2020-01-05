@@ -51,7 +51,7 @@ import saker.nest.utils.FrontendTaskFactory;
 
 public class ExecutionParameterTaskFactory extends FrontendTaskFactory<String> {
 	private static final long serialVersionUID = 1L;
-	
+
 	public static final String TASK_NAME = "std.param.exec";
 
 	@Override

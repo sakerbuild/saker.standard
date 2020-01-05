@@ -32,6 +32,7 @@ export(
 	out bundlepaths = [
 		$mainjar[Path],
 		$apijar[Path],
+		$impljar[Path],
 		$sourcejar[Path],
 	]
 ){
@@ -76,12 +77,40 @@ export(
 			},
 		},
 	)
+	$impljar = saker.jar.create(
+		Output: saker.standard-impl.jar,
+		Resources: [
+			{
+				Directory: $compile[javac][ClassDirectory],
+				Resources: saker/std/impl/**,
+			},
+			{
+				Directory: impl/resources/,
+				Resources: **,
+			},
+			{
+				Files: LICENSE,
+				TargetDirectory: META-INF,
+			},
+		],
+		Manifest: {
+			MainAttributes: {
+				Nest-Bundle-Format-Version: 1,
+				Nest-Bundle-Identifier: "saker.standard-impl-v{ global(VERSION_saker.standard) }",
+				Nest-Bundle-Source: "saker.standard-sources-v{ global(VERSION_saker.standard) }",
+			},
+		},
+	)
 	$sourcejar = saker.jar.create(
 		Output: saker.standard-sources.jar,
 		Resources: [
 			{
 				Directory: src/,
 				Resources: **/*.java,
+			},
+			{
+				Files: LICENSE,
+				TargetDirectory: META-INF,
 			},
 		],
 		Manifest: {

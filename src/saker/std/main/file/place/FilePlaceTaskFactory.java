@@ -22,6 +22,7 @@ import saker.build.runtime.execution.ExecutionContext;
 import saker.build.task.ParameterizableTask;
 import saker.build.task.TaskContext;
 import saker.build.task.utils.annot.SakerInput;
+import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
@@ -70,7 +71,9 @@ public class FilePlaceTaskFactory extends FrontendTaskFactory<SakerPath> {
 							new InvalidPathFormatException("Path must be forward relative: " + pathOption));
 					return null;
 				}
-				return bdpath.resolve(TASK_NAME).resolve(pathOption);
+				SakerPath result = bdpath.resolve(TASK_NAME).resolve(pathOption);
+				taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
+				return result;
 			}
 		};
 	}
