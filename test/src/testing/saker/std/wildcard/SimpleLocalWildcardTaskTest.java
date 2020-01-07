@@ -129,6 +129,9 @@ public class SimpleLocalWildcardTaskTest extends RepositoryLoadingVariablesMetri
 		for (String r : LocalFileProvider.getInstance().getRoots()) {
 			rootpaths.add(SakerPath.valueOf(r));
 		}
+		//remove the / root as it is not matched by the wildcard
+		//having it in would cause the tests to fail on nix systems.
+		rootpaths.remove(SakerPath.PATH_SLASH);
 
 		CombinedTargetTaskResult res;
 

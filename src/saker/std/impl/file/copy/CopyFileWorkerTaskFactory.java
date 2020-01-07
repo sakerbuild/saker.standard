@@ -307,11 +307,7 @@ public class CopyFileWorkerTaskFactory implements TaskFactory<Object>, Task<Obje
 							"Copy source and target paths contain each other: " + filepath + " - " + pastefilepath);
 				}
 
-				SakerPath pasteparentdirpath = pastefilepath.getParent();
-				SakerDirectory pastedir = taskcontext.getTaskUtilities()
-						.resolveDirectoryAtPathCreateIfAbsent(pasteparentdirpath);
-				copyExecutionFileToExecutionPath(taskcontext, filepath, file, pastefilepath, pasteparentdirpath,
-						pastedir, wildcards, copiedfiles);
+				copyExecutionFileToExecutionPath(taskcontext, filepath, file, pastefilepath, wildcards, copiedfiles);
 			}
 
 			@Override
@@ -477,8 +473,11 @@ public class CopyFileWorkerTaskFactory implements TaskFactory<Object>, Task<Obje
 	}
 
 	private static void copyExecutionFileToExecutionPath(TaskContext taskcontext, SakerPath filepath, SakerFile file,
-			SakerPath pastefilepath, SakerPath pasteparentdirpath, SakerDirectory pastedir,
-			Collection<WildcardPath> wildcards, Collection<FileLocation> copiedfiles) {
+			SakerPath pastefilepath, Collection<WildcardPath> wildcards, Collection<FileLocation> copiedfiles) {
+		SakerPath pasteparentdirpath = pastefilepath.getParent();
+		SakerDirectory pastedir = taskcontext.getTaskUtilities()
+				.resolveDirectoryAtPathCreateIfAbsent(pasteparentdirpath);
+
 		if (pastedir == null) {
 			throw new RuntimeException("Failed to create copy target directory at: " + pasteparentdirpath);
 		}

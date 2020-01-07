@@ -51,6 +51,8 @@ public class NoDirOverwriteCopyTaskTest extends RepositoryLoadingVariablesMetric
 		SakerPath filetxtpath = PATH_WORKING_DIRECTORY.resolve("file.txt");
 		SakerPath dirpath = PATH_WORKING_DIRECTORY.resolve("dir");
 		files.putFile(filetxtpath, "hello");
+		//create directory 
+		files.createDirectories(dirpath);
 
 		assertTaskException(RuntimeException.class, () -> runScriptTask("betweenexec"));
 		assertTrue(files.getFileAttributes(dirpath).isDirectory());
