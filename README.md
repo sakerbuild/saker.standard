@@ -1,5 +1,7 @@
 # saker.standard
 
+![Build status](https://img.shields.io/azure-devops/build/sakerbuild/84e4764f-1d0d-47f1-835f-360a5848bb58/2/master)
+
 Commonly used build tasks and support classes for the [saker.build system](https://saker.build). The project contains build tasks that are considered to be commonly occurring when specifying the build process and also contains classes that can be used to represent common values and object during builds.
 
 See the [documentation](https://saker.build/saker.standard/doc/) for more information.
