@@ -35,6 +35,8 @@ import saker.build.task.TaskContext;
 import saker.build.task.TaskExecutionUtilities;
 import saker.build.task.TaskFactory;
 import saker.build.task.identifier.TaskIdentifier;
+import saker.build.trace.BuildTrace;
+import saker.std.main.file.mirror.MirrorFileTaskFactory;
 
 public class MirroringTaskFactory implements TaskFactory<SakerPath>, Task<SakerPath>, Externalizable, TaskIdentifier {
 	private static final long serialVersionUID = 1L;
@@ -53,6 +55,23 @@ public class MirroringTaskFactory implements TaskFactory<SakerPath>, Task<SakerP
 
 	@Override
 	public SakerPath run(TaskContext taskcontext) throws Exception {
+		BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
+		StringBuilder btlabel = new StringBuilder();
+		btlabel.append(MirrorFileTaskFactory.TASK_NAME);
+		btlabel.append(": ");
+		String fn = path.getFileName();
+		if (fn != null) {
+			btlabel.append(fn);
+		} else {
+			String root = path.getRoot();
+			if (root != null) {
+				btlabel.append(root);
+			} else {
+				btlabel.append(path);
+			}
+		}
+		BuildTrace.setDisplayInformation(MirrorFileTaskFactory.TASK_NAME, btlabel.toString());
+
 		TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
 		SakerFile file = taskutils.resolveAtPath(path);
 		if (file == null) {
@@ -66,7 +85,7 @@ public class MirroringTaskFactory implements TaskFactory<SakerPath>, Task<SakerP
 		SakerPath result = SakerPath.valueOf(taskcontext.mirror(file));
 
 		ContentDescriptor filecontents = file.getContentDescriptor();
-		MirroringTaskFactory.MirrorPathContentExecutionProperty mirrorexecproperty = new MirrorPathContentExecutionProperty(
+		MirrorPathContentExecutionProperty mirrorexecproperty = new MirrorPathContentExecutionProperty(
 				taskcontext.getTaskId(), abspath);
 		taskcontext.reportExecutionDependency(mirrorexecproperty, filecontents);
 		return result;

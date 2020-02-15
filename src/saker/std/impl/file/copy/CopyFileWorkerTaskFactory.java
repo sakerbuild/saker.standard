@@ -54,6 +54,7 @@ import saker.build.task.utils.dependencies.WildcardFileCollectionStrategy;
 import saker.build.thirdparty.saker.util.ImmutableUtils;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
+import saker.build.trace.BuildTrace;
 import saker.build.util.file.FixedDirectoryVisitPredicate;
 import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileCollection;
@@ -63,6 +64,7 @@ import saker.std.api.file.location.LocalFileLocation;
 import saker.std.impl.file.property.LocalDirectoryRecursiveFilePathsExecutionProperty;
 import saker.std.impl.file.property.LocalDirectoryWildcardsFilePathsExecutionProperty;
 import saker.std.impl.file.property.LocalFileContentDescriptorExecutionProperty;
+import saker.std.main.file.copy.CopyFileTaskFactory;
 
 public class CopyFileWorkerTaskFactory implements TaskFactory<Object>, Task<Object>, Externalizable, TaskIdentifier {
 	private static final long serialVersionUID = 1L;
@@ -94,6 +96,9 @@ public class CopyFileWorkerTaskFactory implements TaskFactory<Object>, Task<Obje
 
 	@Override
 	public Object run(TaskContext taskcontext) throws Exception {
+		BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
+		taskcontext.setStandardOutDisplayIdentifier(CopyFileTaskFactory.TASK_NAME);
+
 		Collection<FileLocation> copiedfiles = new LinkedHashSet<>();
 		sourceLocation.accept(new FileLocationVisitor() {
 			@Override

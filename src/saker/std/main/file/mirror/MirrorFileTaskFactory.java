@@ -23,6 +23,7 @@ import saker.build.task.exception.MissingRequiredParameterException;
 import saker.build.task.utils.SimpleStructuredObjectTaskResult;
 import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
+import saker.build.trace.BuildTrace;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
@@ -60,6 +61,7 @@ public class MirrorFileTaskFactory extends FrontendTaskFactory<Object> {
 
 			@Override
 			public Object run(TaskContext taskcontext) throws Exception {
+				BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_FRONTEND);
 				if (location == null) {
 					taskcontext.abortExecution(new MissingRequiredParameterException(
 							"Path parameter is null for " + TASK_NAME, taskcontext.getTaskId()));

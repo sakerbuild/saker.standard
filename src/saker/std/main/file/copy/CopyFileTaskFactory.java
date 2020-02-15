@@ -30,6 +30,7 @@ import saker.build.task.utils.SimpleStructuredObjectTaskResult;
 import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.ImmutableUtils;
+import saker.build.trace.BuildTrace;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
@@ -92,6 +93,7 @@ public class CopyFileTaskFactory extends FrontendTaskFactory<Object> {
 
 		@Override
 		public Object run(TaskContext taskcontext) throws Exception {
+			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_FRONTEND);
 			if (sourceOption == null) {
 				taskcontext.abortExecution(new MissingRequiredParameterException(
 						"Source parameter is missing for " + TASK_NAME, taskcontext.getTaskId()));

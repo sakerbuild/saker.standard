@@ -28,6 +28,7 @@ import saker.build.task.TaskContext;
 import saker.build.task.TaskFactory;
 import saker.build.task.dependencies.CommonTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.ObjectUtils;
+import saker.build.trace.BuildTrace;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
@@ -54,6 +55,7 @@ public class AnyEnvironmentQualifierTaskFactory
 
 	@Override
 	public EnvironmentQualifier run(TaskContext taskcontext) throws Exception {
+		BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
 		//never change, we always return the same object
 		taskcontext.reportSelfTaskOutputChangeDetector(CommonTaskOutputChangeDetector.NEVER);
 		return AnyEnvironmentQualifier.create();

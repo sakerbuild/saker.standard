@@ -23,6 +23,7 @@ import saker.build.task.ParameterizableTask;
 import saker.build.task.TaskContext;
 import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
+import saker.build.trace.BuildTrace;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
@@ -56,6 +57,8 @@ public class FilePlaceTaskFactory extends FrontendTaskFactory<SakerPath> {
 
 			@Override
 			public SakerPath run(TaskContext taskcontext) throws Exception {
+				BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+
 				if (pathOption == null) {
 					taskcontext.abortExecution(new NullPointerException("Null path specified."));
 					return null;

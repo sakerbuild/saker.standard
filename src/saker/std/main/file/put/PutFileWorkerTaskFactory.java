@@ -34,6 +34,7 @@ import saker.build.task.TaskContext;
 import saker.build.task.TaskFactory;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.thirdparty.saker.util.io.UnsyncByteArrayInputStream;
+import saker.build.trace.BuildTrace;
 import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileLocation;
 import saker.std.api.file.location.FileLocationVisitor;
@@ -66,6 +67,9 @@ class PutFileWorkerTaskFactory implements TaskFactory<FileLocation>, Task<FileLo
 
 	@Override
 	public FileLocation run(TaskContext taskcontext) throws Exception {
+		BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
+		taskcontext.setStandardOutDisplayIdentifier(PutFileTaskFactory.TASK_NAME);
+
 		fileLocation.accept(new FileLocationVisitor() {
 			@Override
 			public void visit(ExecutionFileLocation loc) {

@@ -25,6 +25,7 @@ import saker.build.task.TaskContext;
 import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.ImmutableUtils;
+import saker.build.trace.BuildTrace;
 import saker.build.util.property.UserParameterEnvironmentProperty;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
@@ -60,6 +61,7 @@ public class UserParametersEnvironmentQualifierTaskFactory extends FrontendTaskF
 
 			@Override
 			public EnvironmentQualifier run(TaskContext taskcontext) throws Exception {
+				BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
 				NavigableMap<String, String> expected = ImmutableUtils.makeImmutableNavigableMap(parametersOption);
 				if (expected == null) {
 					taskcontext.abortExecution(new IllegalArgumentException("Expected parameter values map is null."));
