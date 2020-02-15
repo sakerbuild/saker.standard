@@ -61,7 +61,9 @@ public class UserParametersEnvironmentQualifierTaskFactory extends FrontendTaskF
 
 			@Override
 			public EnvironmentQualifier run(TaskContext taskcontext) throws Exception {
-				BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				}
 				NavigableMap<String, String> expected = ImmutableUtils.makeImmutableNavigableMap(parametersOption);
 				if (expected == null) {
 					taskcontext.abortExecution(new IllegalArgumentException("Expected parameter values map is null."));

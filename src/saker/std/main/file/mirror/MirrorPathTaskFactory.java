@@ -56,7 +56,9 @@ public class MirrorPathTaskFactory extends FrontendTaskFactory<SakerPath> {
 
 			@Override
 			public SakerPath run(TaskContext taskcontext) throws Exception {
-				BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				}
 				if (location == null) {
 					taskcontext.abortExecution(new MissingRequiredParameterException(
 							"Path parameter is null for " + TASK_NAME, taskcontext.getTaskId()));

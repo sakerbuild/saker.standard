@@ -57,7 +57,9 @@ public class FilePlaceTaskFactory extends FrontendTaskFactory<SakerPath> {
 
 			@Override
 			public SakerPath run(TaskContext taskcontext) throws Exception {
-				BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				}
 
 				if (pathOption == null) {
 					taskcontext.abortExecution(new NullPointerException("Null path specified."));

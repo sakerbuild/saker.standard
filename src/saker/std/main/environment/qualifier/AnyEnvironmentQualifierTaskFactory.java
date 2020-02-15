@@ -55,7 +55,9 @@ public class AnyEnvironmentQualifierTaskFactory
 
 	@Override
 	public EnvironmentQualifier run(TaskContext taskcontext) throws Exception {
-		BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+		}
 		//never change, we always return the same object
 		taskcontext.reportSelfTaskOutputChangeDetector(CommonTaskOutputChangeDetector.NEVER);
 		return AnyEnvironmentQualifier.create();

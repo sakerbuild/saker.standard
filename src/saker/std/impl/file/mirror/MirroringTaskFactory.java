@@ -55,22 +55,24 @@ public class MirroringTaskFactory implements TaskFactory<SakerPath>, Task<SakerP
 
 	@Override
 	public SakerPath run(TaskContext taskcontext) throws Exception {
-		BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
-		StringBuilder btlabel = new StringBuilder();
-		btlabel.append(MirrorFileTaskFactory.TASK_NAME);
-		btlabel.append(": ");
-		String fn = path.getFileName();
-		if (fn != null) {
-			btlabel.append(fn);
-		} else {
-			String root = path.getRoot();
-			if (root != null) {
-				btlabel.append(root);
+		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
+			StringBuilder btlabel = new StringBuilder();
+			btlabel.append(MirrorFileTaskFactory.TASK_NAME);
+			btlabel.append(": ");
+			String fn = path.getFileName();
+			if (fn != null) {
+				btlabel.append(fn);
 			} else {
-				btlabel.append(path);
+				String root = path.getRoot();
+				if (root != null) {
+					btlabel.append(root);
+				} else {
+					btlabel.append(path);
+				}
 			}
+			BuildTrace.setDisplayInformation(MirrorFileTaskFactory.TASK_NAME, btlabel.toString());
 		}
-		BuildTrace.setDisplayInformation(MirrorFileTaskFactory.TASK_NAME, btlabel.toString());
 
 		TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
 		SakerFile file = taskutils.resolveAtPath(path);

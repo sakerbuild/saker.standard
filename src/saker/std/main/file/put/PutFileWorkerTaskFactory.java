@@ -67,7 +67,9 @@ class PutFileWorkerTaskFactory implements TaskFactory<FileLocation>, Task<FileLo
 
 	@Override
 	public FileLocation run(TaskContext taskcontext) throws Exception {
-		BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
+		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
+		}
 		taskcontext.setStandardOutDisplayIdentifier(PutFileTaskFactory.TASK_NAME);
 
 		fileLocation.accept(new FileLocationVisitor() {

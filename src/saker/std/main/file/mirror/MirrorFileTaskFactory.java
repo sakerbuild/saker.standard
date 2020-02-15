@@ -61,7 +61,9 @@ public class MirrorFileTaskFactory extends FrontendTaskFactory<Object> {
 
 			@Override
 			public Object run(TaskContext taskcontext) throws Exception {
-				BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_FRONTEND);
+				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_FRONTEND);
+				}
 				if (location == null) {
 					taskcontext.abortExecution(new MissingRequiredParameterException(
 							"Path parameter is null for " + TASK_NAME, taskcontext.getTaskId()));

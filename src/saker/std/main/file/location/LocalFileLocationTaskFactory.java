@@ -61,7 +61,9 @@ public class LocalFileLocationTaskFactory extends FrontendTaskFactory<FileLocati
 
 			@Override
 			public FileLocation run(TaskContext taskcontext) throws Exception {
-				BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				}
 				if (path == null || !path.isAbsolute()) {
 					taskcontext.abortExecution(
 							new TaskParameterException("Path must be absolute: " + path, taskcontext.getTaskId()));

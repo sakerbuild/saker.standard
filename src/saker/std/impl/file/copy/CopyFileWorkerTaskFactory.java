@@ -96,7 +96,9 @@ public class CopyFileWorkerTaskFactory implements TaskFactory<Object>, Task<Obje
 
 	@Override
 	public Object run(TaskContext taskcontext) throws Exception {
-		BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
+		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
+		}
 		taskcontext.setStandardOutDisplayIdentifier(CopyFileTaskFactory.TASK_NAME);
 
 		Collection<FileLocation> copiedfiles = new LinkedHashSet<>();
