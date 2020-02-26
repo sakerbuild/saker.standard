@@ -90,7 +90,7 @@ public class LocalFileContentDescriptorExecutionProperty
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "[path=" + path + "]";
+		return getClass().getSimpleName() + "[" + path + "]";
 	}
 
 }

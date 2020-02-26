@@ -1,16 +1,23 @@
 package saker.std.api.util;
 
 import java.util.Objects;
+import java.util.UUID;
 
+import saker.build.exception.InvalidPathFormatException;
+import saker.build.file.content.ContentDescriptor;
+import saker.build.file.path.ProviderHolderPathKey;
 import saker.build.file.path.SakerPath;
+import saker.build.file.provider.SakerPathFiles;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.runtime.execution.ExecutionProperty;
 import saker.build.task.EnvironmentSelectionResult;
+import saker.build.task.TaskContext;
 import saker.build.task.TaskExecutionEnvironmentSelector;
 import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileLocation;
 import saker.std.api.file.location.FileLocationVisitor;
 import saker.std.api.file.location.LocalFileLocation;
+import saker.std.impl.file.property.TaggedLocalFileContentDescriptorExecutionProperty;
 import saker.std.impl.property.EnvironmentSelectionTestExecutionProperty;
 
 /**
@@ -65,6 +72,41 @@ public class SakerStandardUtils {
 			TaskExecutionEnvironmentSelector environmentselector) throws NullPointerException {
 		Objects.requireNonNull(environmentselector, "environment selector");
 		return new EnvironmentSelectionTestExecutionProperty(environmentselector);
+	}
+
+	/**
+	 * Creates an {@linkplain ExecutionProperty execution property} that queries the content descriptor of a given local
+	 * file.
+	 * <p>
+	 * The execution property will return the content descriptor of the denoted file by using
+	 * {@link ExecutionContext#getContentDescriptor(ProviderHolderPathKey)}. If the file doesn't exist or not
+	 * accessible, the property returns <code>null</code>.
+	 * <p>
+	 * The argument tag serves as an unique identifier for the execution property. It can be used to uniquely associate
+	 * a given execution property with a given task. This can be important as the result of execution properties are
+	 * cached during build execution. If another task modifies the denoted file, the changes in the file contents may be
+	 * unnoticed.
+	 * <p>
+	 * Specifying an arbitrary tag object for the execution property helps avoiding the issue by directly associating it
+	 * with a caller task. In general, the {@linkplain TaskContext#getTaskId() task identifier} of your task is a good
+	 * tag to be passed to this function. Others, such an unique {@link UUID} is also a good candidate. <br>
+	 * The tag should be serializable, and implement {@link Object#equals(Object)}.
+	 * 
+	 * @param localfilepath
+	 *            The local file path.
+	 * @param tag
+	 *            The tag object for the execution property. May be <code>null</code>.
+	 * @return The execution property that returns the content descriptor for a given local file.
+	 * @throws NullPointerException
+	 *             If the path is <code>null</code>.
+	 * @throws InvalidPathFormatException
+	 *             If the path is not absolute.
+	 * @since saker.standard 0.8.2
+	 */
+	public static ExecutionProperty<? extends ContentDescriptor> createLocalFileContentDescriptorExecutionProperty(
+			SakerPath localfilepath, Object tag) throws NullPointerException, InvalidPathFormatException {
+		SakerPathFiles.requireAbsolutePath(localfilepath);
+		return TaggedLocalFileContentDescriptorExecutionProperty.create(localfilepath, tag);
 	}
 
 	private static class FileLocationFileNameVisitor implements FileLocationVisitor {
