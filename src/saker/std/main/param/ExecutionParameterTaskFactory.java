@@ -24,6 +24,7 @@ import saker.build.task.ParameterizableTask;
 import saker.build.task.TaskContext;
 import saker.build.task.utils.annot.SakerInput;
 import saker.build.thirdparty.saker.util.ObjectUtils;
+import saker.build.trace.BuildTrace;
 import saker.build.util.property.UserParameterExecutionProperty;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
@@ -65,6 +66,9 @@ public class ExecutionParameterTaskFactory extends FrontendTaskFactory<String> {
 
 			@Override
 			public String run(TaskContext taskcontext) throws Exception {
+				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				}
 				if (parameterName == null) {
 					taskcontext.abortExecution(new NullPointerException("Execution user parameter name is null."));
 					return null;
