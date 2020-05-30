@@ -21,12 +21,15 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.nio.file.Path;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
 
 import saker.build.exception.FileMirroringUnavailableException;
 import saker.build.file.SakerFile;
 import saker.build.file.content.ContentDescriptor;
 import saker.build.file.path.SakerPath;
 import saker.build.file.provider.LocalFileProvider;
+import saker.build.file.provider.SakerPathFiles;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.runtime.execution.ExecutionProperty;
 import saker.build.task.CommonTaskContentDescriptors;
@@ -35,7 +38,10 @@ import saker.build.task.TaskContext;
 import saker.build.task.TaskExecutionUtilities;
 import saker.build.task.TaskFactory;
 import saker.build.task.identifier.TaskIdentifier;
+import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
+import saker.build.task.utils.dependencies.RecursiveFileCollectionStrategy;
 import saker.build.trace.BuildTrace;
+import saker.build.util.file.FixedDirectoryVisitPredicate;
 import saker.std.main.file.mirror.MirrorFileTaskFactory;
 
 public class MirroringTaskFactory implements TaskFactory<SakerPath>, Task<SakerPath>, Externalizable, TaskIdentifier {
@@ -75,21 +81,38 @@ public class MirroringTaskFactory implements TaskFactory<SakerPath>, Task<SakerP
 		}
 
 		TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
-		SakerFile file = taskutils.resolveAtPath(path);
-		if (file == null) {
-			taskcontext.reportInputFileDependency(null, path, CommonTaskContentDescriptors.NOT_PRESENT);
-			taskcontext.abortExecution(new FileNotFoundException("File not found at path: " + path));
-			return null;
+		NavigableMap<SakerPath, SakerFile> dirinputfiles = taskutils
+				.collectFilesReportInputFileAndAdditionDependency(null, RecursiveFileCollectionStrategy.create(path));
+
+		final SakerPath result;
+		TaskIdentifier taskid = taskcontext.getTaskId();
+		if (!dirinputfiles.isEmpty()) {
+			//the specified file to mirror is a directory
+			//perform the mirroring
+			result = SakerPath.valueOf(taskcontext.mirror(dirinputfiles.get(path), new FixedDirectoryVisitPredicate(
+					SakerPathFiles.relativizeSubPath(dirinputfiles.navigableKeySet(), path))));
+			//TODO this should be done in bulk
+			for (Entry<SakerPath, SakerFile> entry : dirinputfiles.entrySet()) {
+				MirrorPathContentExecutionProperty mirrorexecproperty = new MirrorPathContentExecutionProperty(taskid,
+						entry.getKey());
+				taskcontext.reportExecutionDependency(mirrorexecproperty, entry.getValue().getContentDescriptor());
+			}
+		} else {
+			SakerFile file = taskutils.resolveAtPath(path);
+			if (file == null) {
+				taskcontext.reportInputFileDependency(null, path, CommonTaskContentDescriptors.NOT_PRESENT);
+				taskcontext.abortExecution(new FileNotFoundException("File not found at path: " + path));
+				return null;
+			}
+			ContentDescriptor filecontents = file.getContentDescriptor();
+			taskcontext.reportInputFileDependency(null, path, filecontents);
+			result = SakerPath.valueOf(taskcontext.mirror(file));
+
+			MirrorPathContentExecutionProperty mirrorexecproperty = new MirrorPathContentExecutionProperty(taskid,
+					path);
+			taskcontext.reportExecutionDependency(mirrorexecproperty, filecontents);
 		}
-		SakerPath abspath = path.isRelative() ? taskcontext.getTaskWorkingDirectoryPath().resolve(path) : path;
-
-		taskutils.reportInputFileDependency(null, file);
-		SakerPath result = SakerPath.valueOf(taskcontext.mirror(file));
-
-		ContentDescriptor filecontents = file.getContentDescriptor();
-		MirrorPathContentExecutionProperty mirrorexecproperty = new MirrorPathContentExecutionProperty(
-				taskcontext.getTaskId(), abspath);
-		taskcontext.reportExecutionDependency(mirrorexecproperty, filecontents);
+		taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
 		return result;
 	}
 

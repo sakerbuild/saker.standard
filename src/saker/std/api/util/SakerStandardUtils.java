@@ -91,6 +91,20 @@ public class SakerStandardUtils {
 	 * with a caller task. In general, the {@linkplain TaskContext#getTaskId() task identifier} of your task is a good
 	 * tag to be passed to this function. Others, such an unique {@link UUID} is also a good candidate. <br>
 	 * The tag should be serializable, and implement {@link Object#equals(Object)}.
+	 * <p>
+	 * <b>Note</b> that if you're using this execution property to report local output file dependencies, you may need
+	 * to set additional unique values as part of the tag. This is because the build system will check the value of the
+	 * execution property when it detects the deltas for the task. If you report the property with the same tag, then
+	 * the old (cached) value may be reported, therefore causing unexpected results. An example that works around this
+	 * for output files:
+	 * 
+	 * <pre>
+	 * TaskContext taskcontext;
+	 * 
+	 * taskcontext.getTaskUtilities().getReportExecutionDependency(
+	 * 		SakerStandardUtils.createLocalFileContentDescriptorExecutionProperty(outputlocalfilepath,
+	 * 				ImmutableUtils.asUnmodifiableArrayList(taskcontext.getTaskId(), UUID.randomUUID())));
+	 * </pre>
 	 * 
 	 * @param localfilepath
 	 *            The local file path.

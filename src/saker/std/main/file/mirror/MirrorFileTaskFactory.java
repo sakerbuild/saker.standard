@@ -78,16 +78,15 @@ public class MirrorFileTaskFactory extends FrontendTaskFactory<Object> {
 						taskcontext.startTask(backendtask, backendtask, null);
 
 						result[0] = new SimpleStructuredObjectTaskResult(backendtask);
-						taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result[0]));
 					}
 
 					@Override
 					public void visit(LocalFileLocation loc) {
 						//no need to mirror, already a local path
 						result[0] = loc.getLocalPath();
-						taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result[0]));
 					}
 				});
+				taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result[0]));
 				return result[0];
 			}
 		};
