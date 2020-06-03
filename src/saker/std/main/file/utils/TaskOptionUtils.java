@@ -18,7 +18,9 @@ package saker.std.main.file.utils;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.NavigableMap;
+import java.util.Objects;
 
+import saker.build.exception.InvalidPathFormatException;
 import saker.build.file.SakerFile;
 import saker.build.file.path.SakerPath;
 import saker.build.file.path.WildcardPath;
@@ -87,5 +89,18 @@ public class TaskOptionUtils {
 			}
 		});
 		return result;
+	}
+
+	public static void requireForwardRelativePathWithFileName(SakerPath path, String message) {
+		if (message == null) {
+			message = "path";
+		}
+		Objects.requireNonNull(path, message);
+		if (!path.isForwardRelative()) {
+			throw new InvalidPathFormatException(message + " must be forward relative: " + path);
+		}
+		if (path.getFileName() == null) {
+			throw new InvalidPathFormatException(message + " must have a file name: " + path);
+		}
 	}
 }
