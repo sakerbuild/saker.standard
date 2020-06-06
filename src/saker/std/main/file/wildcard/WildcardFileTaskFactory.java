@@ -34,6 +34,7 @@ import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.task.utils.dependencies.WildcardFileCollectionStrategy;
 import saker.build.thirdparty.saker.util.ObjectUtils;
+import saker.build.trace.BuildTrace;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
@@ -81,6 +82,10 @@ public class WildcardFileTaskFactory extends FrontendTaskFactory<Object> {
 
 			@Override
 			public Object run(TaskContext taskcontext) throws Exception {
+				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+				}
+
 				Collection<FileCollectionStrategy> collectionstrategies = new HashSet<>();
 				for (WildcardPath wcpath : wildcard) {
 					if (wcpath == null) {

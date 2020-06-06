@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package saker.std.main.file.put;
+package saker.std.impl.file.put;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -40,8 +40,9 @@ import saker.std.api.file.location.FileLocation;
 import saker.std.api.file.location.FileLocationVisitor;
 import saker.std.api.file.location.LocalFileLocation;
 import saker.std.impl.file.property.LocalFileContentDescriptorExecutionProperty;
+import saker.std.main.file.put.PutFileTaskFactory;
 
-class PutFileWorkerTaskFactory implements TaskFactory<FileLocation>, Task<FileLocation>, Externalizable {
+public class PutFileWorkerTaskFactory implements TaskFactory<FileLocation>, Task<FileLocation>, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private FileLocation fileLocation;

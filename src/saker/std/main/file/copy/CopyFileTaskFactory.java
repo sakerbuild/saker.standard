@@ -103,12 +103,12 @@ public class CopyFileTaskFactory extends FrontendTaskFactory<Object> {
 			}
 			if (this.targetOption == null) {
 				taskcontext.abortExecution(new MissingRequiredParameterException(
-						"Copy target location parameter is missing: " + TASK_NAME, taskcontext.getTaskId()));
+						"Copy target location parameter is missing for " + TASK_NAME, taskcontext.getTaskId()));
 				return null;
 			}
 			if (this.wildcardOption == null) {
 				taskcontext.abortExecution(new MissingRequiredParameterException(
-						"Null Wildcard parameter: " + TASK_NAME, taskcontext.getTaskId()));
+						"Null Wildcard parameter for " + TASK_NAME, taskcontext.getTaskId()));
 				return null;
 			}
 			try {

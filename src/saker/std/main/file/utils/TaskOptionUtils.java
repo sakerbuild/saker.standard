@@ -61,7 +61,32 @@ public class TaskOptionUtils {
 
 	public static Collection<FileLocation> toFileLocations(MultiFileLocationTaskOption taskoption,
 			TaskContext taskcontext, Object wildcarddependencytag) {
+		if (taskoption == null) {
+			return null;
+		}
 		LinkedHashSet<FileLocation> result = new LinkedHashSet<>();
+		toFileLocationsImpl(taskoption, taskcontext, wildcarddependencytag, result);
+		return result;
+	}
+
+	//since 0.8.4
+	public static Collection<FileLocation> toFileLocations(Iterable<? extends MultiFileLocationTaskOption> taskoption,
+			TaskContext taskcontext, Object wildcarddependencytag) {
+		if (taskoption == null) {
+			return null;
+		}
+		LinkedHashSet<FileLocation> result = new LinkedHashSet<>();
+		for (MultiFileLocationTaskOption to : taskoption) {
+			toFileLocationsImpl(to, taskcontext, wildcarddependencytag, result);
+		}
+		return result;
+	}
+
+	private static void toFileLocationsImpl(MultiFileLocationTaskOption taskoption, TaskContext taskcontext,
+			Object wildcarddependencytag, LinkedHashSet<FileLocation> result) {
+		if (taskoption == null) {
+			return;
+		}
 		taskoption.accept(new MultiFileLocationTaskOption.Visitor() {
 
 			@Override
@@ -88,7 +113,6 @@ public class TaskOptionUtils {
 				result.addAll(locations);
 			}
 		});
-		return result;
 	}
 
 	public static void requireForwardRelativePathWithFileName(SakerPath path, String message) {

@@ -1,0 +1,6 @@
+std.dir.prepare(
+	Contents: {
+		Files: **/*.txt,
+		TargetDirectory: tdir,
+	},
+)

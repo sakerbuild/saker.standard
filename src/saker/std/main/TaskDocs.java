@@ -110,4 +110,14 @@ public class TaskDocs {
 	@NestInformation("Represents a character encoding format (charset).")
 	public static class DocCharsetTaskOption {
 	}
+
+	@NestTypeInformation(qualifiedName = "Pattern")
+	@NestInformation("Represents a regular expression pattern.")
+	public static class DocPattern {
+	}
+
+	@NestTypeInformation(qualifiedName = "PatternReplacement")
+	@NestInformation("Represents a replacement expression to be used together with a regular expression.")
+	public static class DocPatternReplacement {
+	}
 }

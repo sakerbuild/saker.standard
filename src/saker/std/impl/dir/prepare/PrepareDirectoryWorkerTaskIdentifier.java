@@ -13,46 +13,54 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package saker.std.main.file.put;
+package saker.std.impl.dir.prepare;
 
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import saker.build.file.path.SakerPath;
 import saker.build.task.identifier.TaskIdentifier;
-import saker.std.api.file.location.FileLocation;
+import saker.build.thirdparty.saker.util.io.SerialUtils;
 
-class PutFileWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
+public class PrepareDirectoryWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
 	private static final long serialVersionUID = 1L;
 
-	private FileLocation fileLocation;
+	/**
+	 * Includes the parent task name build directory.
+	 */
+	private SakerPath outputPath;
 
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public PutFileWorkerTaskIdentifier() {
+	public PrepareDirectoryWorkerTaskIdentifier() {
 	}
 
-	public PutFileWorkerTaskIdentifier(FileLocation fileLocation) {
-		this.fileLocation = fileLocation;
+	public PrepareDirectoryWorkerTaskIdentifier(SakerPath outputPath) {
+		this.outputPath = outputPath;
+	}
+
+	public SakerPath getOutputPath() {
+		return outputPath;
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(fileLocation);
+		out.writeObject(outputPath);
 	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		fileLocation = (FileLocation) in.readObject();
+		outputPath = SerialUtils.readExternalObject(in);
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((fileLocation == null) ? 0 : fileLocation.hashCode());
+		result = prime * result + ((outputPath == null) ? 0 : outputPath.hashCode());
 		return result;
 	}
 
@@ -64,17 +72,18 @@ class PutFileWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		PutFileWorkerTaskIdentifier other = (PutFileWorkerTaskIdentifier) obj;
-		if (fileLocation == null) {
-			if (other.fileLocation != null)
+		PrepareDirectoryWorkerTaskIdentifier other = (PrepareDirectoryWorkerTaskIdentifier) obj;
+		if (outputPath == null) {
+			if (other.outputPath != null)
 				return false;
-		} else if (!fileLocation.equals(other.fileLocation))
+		} else if (!outputPath.equals(other.outputPath))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "[" + (fileLocation != null ? "fileLocation=" + fileLocation : "") + "]";
+		return getClass().getSimpleName() + "[" + outputPath + "]";
 	}
+
 }

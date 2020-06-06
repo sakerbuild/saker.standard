@@ -1,0 +1,3 @@
+std.dir.prepare(
+	Contents: **/*.txt,
+)

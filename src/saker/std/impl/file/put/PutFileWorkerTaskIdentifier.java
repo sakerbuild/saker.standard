@@ -13,63 +13,46 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package saker.std.api.file.location;
+package saker.std.impl.file.put;
 
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import saker.build.file.path.SakerPath;
+import saker.build.task.identifier.TaskIdentifier;
+import saker.std.api.file.location.FileLocation;
 
-class ExecutionFileLocationImpl implements FileLocation, Externalizable, ExecutionFileLocation {
+public class PutFileWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
 	private static final long serialVersionUID = 1L;
 
-	private SakerPath path;
+	private FileLocation fileLocation;
 
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public ExecutionFileLocationImpl() {
+	public PutFileWorkerTaskIdentifier() {
 	}
 
-	public ExecutionFileLocationImpl(SakerPath path) {
-		//absolute path checked by caller
-		this.path = path;
-	}
-
-	@Override
-	public SakerPath getPath() {
-		return path;
-	}
-
-	@Override
-	//for supporting automatic conversion to SakerPath
-	@SuppressWarnings("deprecation")
-	public SakerPath toSakerPath() {
-		return getPath();
-	}
-
-	@Override
-	public void accept(FileLocationVisitor visitor) {
-		visitor.visit(this);
+	public PutFileWorkerTaskIdentifier(FileLocation fileLocation) {
+		this.fileLocation = fileLocation;
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(path);
+		out.writeObject(fileLocation);
 	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		path = (SakerPath) in.readObject();
+		fileLocation = (FileLocation) in.readObject();
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((fileLocation == null) ? 0 : fileLocation.hashCode());
 		return result;
 	}
 
@@ -81,18 +64,17 @@ class ExecutionFileLocationImpl implements FileLocation, Externalizable, Executi
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		ExecutionFileLocationImpl other = (ExecutionFileLocationImpl) obj;
-		if (path == null) {
-			if (other.path != null)
+		PutFileWorkerTaskIdentifier other = (PutFileWorkerTaskIdentifier) obj;
+		if (fileLocation == null) {
+			if (other.fileLocation != null)
 				return false;
-		} else if (!path.equals(other.path))
+		} else if (!fileLocation.equals(other.fileLocation))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "[path=" + path + "]";
+		return getClass().getSimpleName() + "[" + (fileLocation != null ? "fileLocation=" + fileLocation : "") + "]";
 	}
-
 }

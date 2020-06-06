@@ -1,3 +1,4 @@
+std.dir.prepare=saker.std.main.dir.prepare.PrepareDirectoryTaskFactory
 std.file.mirror=saker.std.main.file.mirror.MirrorFileTaskFactory
 std.file.mirror.path=saker.std.main.file.mirror.MirrorPathTaskFactory
 std.file.copy=saker.std.main.file.copy.CopyFileTaskFactory

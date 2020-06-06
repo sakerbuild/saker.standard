@@ -28,6 +28,8 @@ import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
 import saker.nest.utils.FrontendTaskFactory;
 import saker.std.api.file.location.FileLocation;
+import saker.std.impl.file.put.PutFileWorkerTaskFactory;
+import saker.std.impl.file.put.PutFileWorkerTaskIdentifier;
 import saker.std.main.TaskDocs.DocCharsetTaskOption;
 import saker.std.main.TaskDocs.DocFileLocation;
 import saker.std.main.file.option.FileLocationTaskOption;

@@ -1,0 +1,10 @@
+std.dir.prepare(
+	Contents: {
+		Wildcard: **/*.txt,
+		Directory: dir,
+		Remap: {
+			"(.*\\/)?f([0-9]+).txt" : "$2/$1f.txt"
+		},
+		TargetDirectory: tdir,
+	},
+)

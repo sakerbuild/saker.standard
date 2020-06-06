@@ -49,8 +49,11 @@ public interface ExecutionFileLocation extends FileLocation {
 	 * class. This makes the execution file location assignable to task input parameters with the {@link SakerPath}
 	 * type.
 	 * 
+	 * @deprecated Use {@link #getPath()} instead.
 	 * @return The path.
 	 */
+	//this function should be removed over time, as it has been moved to the implementation and is not necessary to be defined in the interface
+	@Deprecated
 	public default SakerPath toSakerPath() {
 		return getPath();
 	}

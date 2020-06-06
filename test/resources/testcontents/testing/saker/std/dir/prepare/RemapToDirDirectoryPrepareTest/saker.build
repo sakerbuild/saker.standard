@@ -1,0 +1,8 @@
+std.dir.prepare(
+	Contents: {
+		Files: **/*.txt,
+		Remap: {
+			"f(.*).txt": "$1/f.txt"
+		}
+	},
+)

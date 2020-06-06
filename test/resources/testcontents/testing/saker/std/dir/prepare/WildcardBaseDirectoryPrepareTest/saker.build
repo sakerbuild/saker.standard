@@ -1,0 +1,6 @@
+std.dir.prepare(
+	Contents: {
+		Wildcard: **/*.txt,
+		Directory: dir,
+	},
+)
