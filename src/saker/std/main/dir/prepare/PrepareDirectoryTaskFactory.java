@@ -39,11 +39,10 @@ import saker.std.main.file.utils.TaskOptionUtils;
 
 @NestInformation("Prepares the contents of a directory with the specified files.\n"
 		+ "The task will create the configured directory hierarchy in the specified output location. "
-		+ "It will delete any pre-existing contents and copy the specified files into it.\n"
-		+ "The task can be used to prepare/create the application output hierarchy and having any pre-existing "
-		+ "files removed beforehand.\n"
-		+ "Note that the task won't re-run if the inputs/outputs haven't changed. If you manually place additional files "
-		+ "in the output directory, they will only be deleted when the task is re-run.")
+		+ "It will delete any previous outputs in case of incremental builds and copy the specified files into it.\n"
+		+ "The task can be used to prepare/create the application output hierarchy and allows testing, packaging, and other "
+		+ "operations to be performed later.\n"
+		+ "The ClearDirectory parameter can be used to control how existing files should be handled in case of incremental builds..")
 @NestParameterInformation(value = "Contents",
 		aliases = { "" },
 		required = true,
@@ -53,6 +52,15 @@ import saker.std.main.file.utils.TaskOptionUtils;
 		type = @NestTypeUsage(SakerPath.class),
 		info = @NestInformation("Specifies the output path of the contents.\n"
 				+ "The output is a forward relative path that specifies the location in the build directory."))
+@NestParameterInformation(value = "ClearDirectory",
+		type = @NestTypeUsage(boolean.class),
+		info = @NestInformation("Specifies whether or not existing files in the output directory should be removed or not.\n"
+				+ "If this parameter is set to true, the build task will remove all existing files from the output directory.\n"
+				+ "If set to false, only files which were previously created by the task will be removed in case of incremental builds.\n"
+				+ "The default value is false.\n"
+				+ "In general keeping this parameter as false can help testing the application that you're developing as any additionally "
+				+ "created files by the app will be persisted between builds. If you're creating release builds, then set this parameter "
+				+ "to true to ensure that other leftover or stale files don't interfere with the build results."))
 public class PrepareDirectoryTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;
 
@@ -66,6 +74,9 @@ public class PrepareDirectoryTaskFactory extends FrontendTaskFactory<Object> {
 
 			@SakerInput(value = { "Output" })
 			public SakerPath outputOption;
+
+			@SakerInput(value = { "ClearDirectory" })
+			public boolean clearDirectoryOption = false;
 
 			@Override
 			public Object run(TaskContext taskcontext) throws Exception {
@@ -88,7 +99,8 @@ public class PrepareDirectoryTaskFactory extends FrontendTaskFactory<Object> {
 
 				PrepareDirectoryWorkerTaskIdentifier workertaskid = new PrepareDirectoryWorkerTaskIdentifier(
 						outputpath);
-				PrepareDirectoryWorkerTaskFactory workertask = new PrepareDirectoryWorkerTaskFactory(inputs);
+				PrepareDirectoryWorkerTaskFactory workertask = new PrepareDirectoryWorkerTaskFactory(inputs,
+						clearDirectoryOption);
 				taskcontext.startTask(workertaskid, workertask, null);
 
 				SimpleStructuredObjectTaskResult result = new SimpleStructuredObjectTaskResult(workertaskid);

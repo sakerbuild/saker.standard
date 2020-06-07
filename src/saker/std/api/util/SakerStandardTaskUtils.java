@@ -89,6 +89,8 @@ public class SakerStandardTaskUtils {
 	 * 
 	 * @param inputs
 	 *            The forward relative output paths mapped to their input file locations.
+	 * @param cleardirectory
+	 *            Whether or not the output directory should be cleared before the files are placed in it.
 	 * @return The worker task factory.
 	 * @throws NullPointerException
 	 *             If the argument or any of the elements are <code>null</code>.
@@ -97,7 +99,7 @@ public class SakerStandardTaskUtils {
 	 * @since saker.standard 0.8.4
 	 */
 	public static TaskFactory<? extends PrepareDirectoryWorkerTaskOutput> createPrepareDirectoryTaskFactory(
-			NavigableMap<SakerPath, ? extends FileLocation> inputs)
+			NavigableMap<SakerPath, ? extends FileLocation> inputs, boolean cleardirectory)
 			throws NullPointerException, InvalidPathFormatException {
 		Objects.requireNonNull(inputs, "inputs");
 		NavigableMap<SakerPath, FileLocation> inputsmap = ImmutableUtils.makeImmutableNavigableMap(inputs);
@@ -122,7 +124,31 @@ public class SakerStandardTaskUtils {
 						"Entry output path must have a file name: " + opath + " for " + location);
 			}
 		}
-		return new PrepareDirectoryWorkerTaskFactory(inputsmap);
+		return new PrepareDirectoryWorkerTaskFactory(inputsmap, cleardirectory);
+	}
+
+	/**
+	 * Creates a prepare directory worker task for the specified inputs.
+	 * <p>
+	 * Same as:
+	 * 
+	 * <pre>
+	 * {@link #createPrepareDirectoryTaskFactory(NavigableMap, boolean) createPrepareDirectoryTaskFactory}(inputs, false)
+	 * </pre>
+	 * 
+	 * @param inputs
+	 *            The forward relative output paths mapped to their input file locations.
+	 * @return The worker task factory.
+	 * @throws NullPointerException
+	 *             If the argument or any of the elements are <code>null</code>.
+	 * @throws InvalidPathFormatException
+	 *             If an output path is not forward relative or has no file name.
+	 * @since saker.standard 0.8.4
+	 */
+	public static TaskFactory<? extends PrepareDirectoryWorkerTaskOutput> createPrepareDirectoryTaskFactory(
+			NavigableMap<SakerPath, ? extends FileLocation> inputs)
+			throws NullPointerException, InvalidPathFormatException {
+		return createPrepareDirectoryTaskFactory(inputs, false);
 	}
 
 	/**

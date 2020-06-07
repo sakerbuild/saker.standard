@@ -20,11 +20,15 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import saker.build.file.DelegateSakerFile;
@@ -41,7 +45,7 @@ import saker.build.task.TaskContext;
 import saker.build.task.TaskExecutionUtilities;
 import saker.build.task.TaskFactory;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
-import saker.build.thirdparty.saker.util.ImmutableUtils;
+import saker.build.task.utils.dependencies.RecursiveFileCollectionStrategy;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
 import saker.build.trace.BuildTrace;
@@ -57,6 +61,7 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 	private static final long serialVersionUID = 1L;
 
 	private NavigableMap<SakerPath, FileLocation> inputs;
+	private boolean clearDirectory;
 
 	/**
 	 * For {@link Externalizable}.
@@ -64,8 +69,9 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 	public PrepareDirectoryWorkerTaskFactory() {
 	}
 
-	public PrepareDirectoryWorkerTaskFactory(NavigableMap<SakerPath, FileLocation> inputs) {
+	public PrepareDirectoryWorkerTaskFactory(NavigableMap<SakerPath, FileLocation> inputs, boolean clearDirectory) {
 		this.inputs = inputs;
+		this.clearDirectory = clearDirectory;
 	}
 
 	@Override
@@ -87,12 +93,44 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 		TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
 		SakerDirectory outputdir = taskutils
 				.resolveDirectoryAtPathCreate(SakerPathFiles.requireBuildDirectory(taskcontext), outpath);
-		outputdir.clear();
 
 		SakerPath outputdirpath = outputdir.getSakerPath();
 
-		TreeMap<SakerPath, ContentDescriptor> inputfilecontents = new TreeMap<>();
-		TreeMap<SakerPath, ContentDescriptor> outputfilecontents = new TreeMap<>();
+		if (clearDirectory) {
+			outputdir.clear();
+		} else {
+			NavigableMap<SakerPath, ? extends SakerFile> prevoutputdeps = SakerPathFiles.getPathSubMapDirectoryChildren(
+					taskcontext.getPreviousOutputDependencies(null), outputdirpath, false);
+			if (!ObjectUtils.isNullOrEmpty(prevoutputdeps)) {
+				//remove previous outputs that are under the output directory
+				List<SakerDirectory> dirs = new ArrayList<>();
+				for (Entry<SakerPath, ? extends SakerFile> entry : prevoutputdeps.entrySet()) {
+					SakerFile f = entry.getValue();
+					if (f == null) {
+						//already removed
+						continue;
+					}
+					if (f instanceof SakerDirectory) {
+						//we may need to keep the directory if there's any files placed in it.
+						dirs.add((SakerDirectory) f);
+					} else {
+						f.remove();
+					}
+				}
+				for (SakerDirectory d : dirs) {
+					if (d.isEmpty()) {
+						d.remove();
+					} // else keep it as some other agent placed a file in it
+				}
+			}
+		}
+
+		NavigableMap<SakerPath, ContentDescriptor> inputfilecontents = new TreeMap<>();
+		NavigableMap<SakerPath, ContentDescriptor> outputfilecontents = new TreeMap<>();
+
+		outputfilecontents.put(outputdirpath, DirectoryContentDescriptor.INSTANCE);
+
+		NavigableSet<SakerPath> outputfilepaths = new TreeSet<>();
 
 		UUID taskuuid = UUID.randomUUID();
 
@@ -100,8 +138,28 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 		for (Entry<SakerPath, FileLocation> entry : inputs.entrySet()) {
 			SakerPath entrypath = entry.getKey();
 			String entryfilename = entrypath.getFileName();
-			SakerDirectory parentdir = taskutils.resolveDirectoryAtRelativePathCreate(outputdir, entrypath.getParent());
+			SakerDirectory parentdir = outputdir;
+			{
+				SakerPath currentpath = outputdirpath;
+				ListIterator<String> it = entrypath.nameIterator();
+				while (true) {
+					String n = it.next();
+					if (!it.hasNext()) {
+						break;
+					}
+					parentdir = parentdir.getDirectoryCreate(n);
+					currentpath = currentpath.resolve(n);
+					ContentDescriptor prev = outputfilecontents.putIfAbsent(currentpath,
+							DirectoryContentDescriptor.INSTANCE);
+					if (prev != null && !DirectoryContentDescriptor.INSTANCE.equals(prev)) {
+						throw new IllegalArgumentException("Conflicting output files at: " + currentpath
+								+ " with contents: " + DirectoryContentDescriptor.INSTANCE + " and " + prev);
+					}
+				}
+			}
+			SakerDirectory fparentdir = parentdir;
 			SakerPath entryoutpath = outputdirpath.resolve(entrypath);
+			outputfilepaths.add(entryoutpath);
 			entry.getValue().accept(new FileLocationVisitor() {
 				@Override
 				public void visit(LocalFileLocation loc) {
@@ -112,7 +170,7 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 						throw ObjectUtils.sneakyThrow(new NoSuchFileException(localpath.toString()));
 					}
 					if (cd instanceof DirectoryContentDescriptor) {
-						parentdir.getDirectoryCreate(entryfilename);
+						fparentdir.getDirectoryCreate(entryfilename);
 					} else {
 						try {
 							SakerFile newfile = taskutils.createProviderPathFile(entryfilename,
@@ -122,7 +180,7 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 								throw new ConcurrentModificationException(
 										"File hierarchy was concurrently modified at " + loc);
 							}
-							parentdir.add(newfile);
+							fparentdir.add(newfile);
 						} catch (Exception e) {
 							throw ObjectUtils.sneakyThrow(e);
 						}
@@ -140,20 +198,23 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 					ContentDescriptor cd = f.getContentDescriptor();
 					inputfilecontents.put(path, cd);
 					if (f instanceof SakerDirectory) {
-						parentdir.getDirectoryCreate(entryfilename);
+						fparentdir.getDirectoryCreate(entryfilename);
 					} else {
-						parentdir.add(new DelegateSakerFile(entryfilename, f));
+						fparentdir.add(new DelegateSakerFile(entryfilename, f));
 					}
 					outputfilecontents.put(entryoutpath, cd);
 				}
 			});
 		}
 		taskutils.reportInputFileDependency(null, inputfilecontents);
-		taskutils.reportOutputFileDependency(null, outputfilecontents);
+		if (clearDirectory) {
+			//use the input dependency reporting to ensure that we re-run if any files are added to the output directory 
+			taskcontext.reportInputFileAdditionDependency(null, RecursiveFileCollectionStrategy.create(outputdirpath));
+			taskutils.reportInputFileDependency(null, outputfilecontents);
+		} else {
+			taskutils.reportOutputFileDependency(null, outputfilecontents);
+		}
 		outputdir.synchronize();
-
-		NavigableSet<SakerPath> outputfilepaths = ImmutableUtils
-				.makeImmutableNavigableSet(outputfilecontents.navigableKeySet());
 
 		PrepareDirectoryWorkerTaskOutputImpl result = new PrepareDirectoryWorkerTaskOutputImpl(outputdirpath,
 				outputfilepaths);
@@ -169,11 +230,13 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		SerialUtils.writeExternalMap(out, inputs);
+		out.writeBoolean(clearDirectory);
 	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		inputs = SerialUtils.readExternalSortedImmutableNavigableMap(in);
+		clearDirectory = in.readBoolean();
 	}
 
 	@Override
@@ -193,6 +256,8 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 		if (getClass() != obj.getClass())
 			return false;
 		PrepareDirectoryWorkerTaskFactory other = (PrepareDirectoryWorkerTaskFactory) obj;
+		if (clearDirectory != other.clearDirectory)
+			return false;
 		if (inputs == null) {
 			if (other.inputs != null)
 				return false;

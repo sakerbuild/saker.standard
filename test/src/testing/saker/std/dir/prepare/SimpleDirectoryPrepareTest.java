@@ -34,6 +34,20 @@ public class SimpleDirectoryPrepareTest extends RepositoryLoadingVariablesMetric
 		runScriptTask("build");
 		assertEmpty(getMetric().getRunTaskIdFactories());
 
+		files.putFile(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/f2.txt"), "outmod");
+		runScriptTask("build");
+		assertEquals(files.getAllBytes(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/f1.txt")).toString(),
+				"f1");
+		assertEquals(files.getAllBytes(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/f2.txt")).toString(),
+				"f2");
+
+		files.delete(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/f2.txt"));
+		runScriptTask("build");
+		assertEquals(files.getAllBytes(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/f1.txt")).toString(),
+				"f1");
+		assertEquals(files.getAllBytes(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/f2.txt")).toString(),
+				"f2");
+
 		files.putFile(PATH_WORKING_DIRECTORY.resolve("f1.txt"), "f1mod");
 		runScriptTask("build");
 		assertEquals(files.getAllBytes(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/f1.txt")).toString(),
@@ -62,10 +76,8 @@ public class SimpleDirectoryPrepareTest extends RepositoryLoadingVariablesMetric
 		//The task should NOT re-run if some file was added to the output directory
 		//this is so the developer can test the app and use temporary files without the build
 		//system automatically deleting them in no-op builds
-		//HOWEVER
-		// if the inputs are changed, then the directory should be cleared too
-		//the developer could do some workarounds with the copy task to keep previous data
-		//but this is generally not an use-case that we want to support
+		//even if the task is rerun, only files which were added by the prepare task
+		//should be deleted. other files which are added by other tasks or the developer should be kept
 		files.putFile(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/fxxx.txt"), "xxx");
 		runScriptTask("build");
 		assertEmpty(getMetric().getRunTaskIdFactories());
@@ -78,8 +90,8 @@ public class SimpleDirectoryPrepareTest extends RepositoryLoadingVariablesMetric
 				"f1modagain");
 		assertEquals(files.getAllBytes(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/f2.txt")).toString(),
 				"f2");
-		assertException(IOException.class,
-				() -> files.getAllBytes(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/fxxx.txt")));
+		assertEquals(files.getAllBytes(PATH_BUILD_DIRECTORY.resolve("std.dir.prepare/default/fxxx.txt")).toString(),
+				"xxx");
 	}
 
 }

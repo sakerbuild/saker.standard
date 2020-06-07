@@ -65,8 +65,8 @@ public class MirrorDirectoryTaskTest extends RepositoryLoadingVariablesMetricEnv
 		assertEmpty(getMetric().getRunTaskIdFactories());
 
 		localfp.setFileBytes(SakerPath.valueOf(mirrorlocalpath.resolve("b.txt")),
-				ByteArrayRegion.wrap("x".getBytes()));
-		assertEquals(localfp.getAllBytes(mirrorlocalpath.resolve("b.txt")).toString(), "x");
+				ByteArrayRegion.wrap("xx".getBytes()));
+		assertEquals(localfp.getAllBytes(mirrorlocalpath.resolve("b.txt")).toString(), "xx");
 
 		res = runScriptTask("build");
 		assertEquals(res.getTargetTaskResult("mirror"), SakerPath.valueOf(mirrorlocalpath));
