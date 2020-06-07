@@ -103,13 +103,23 @@ public class SakerStandardTaskUtils {
 		NavigableMap<SakerPath, FileLocation> inputsmap = ImmutableUtils.makeImmutableNavigableMap(inputs);
 		for (Entry<SakerPath, FileLocation> entry : inputsmap.entrySet()) {
 			SakerPath opath = entry.getKey();
-			Objects.requireNonNull(opath, "output path");
-			Objects.requireNonNull(entry.getValue(), "input location");
+			FileLocation location = entry.getValue();
+			if (opath == null) {
+				if (location == null) {
+					throw new NullPointerException("output path");
+				}
+				throw new NullPointerException("Null output path for " + location);
+			}
+			if (location == null) {
+				throw new NullPointerException("Null input location for " + opath);
+			}
 			if (!opath.isForwardRelative()) {
-				throw new InvalidPathFormatException("Entry output path must be forward relative: " + opath);
+				throw new InvalidPathFormatException(
+						"Entry output path must be forward relative: " + opath + " for " + location);
 			}
 			if (opath.getFileName() == null) {
-				throw new InvalidPathFormatException("Entry output path must have a file name: " + opath);
+				throw new InvalidPathFormatException(
+						"Entry output path must have a file name: " + opath + " for " + location);
 			}
 		}
 		return new PrepareDirectoryWorkerTaskFactory(inputsmap);
