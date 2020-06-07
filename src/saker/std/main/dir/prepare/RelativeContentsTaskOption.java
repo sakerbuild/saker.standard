@@ -17,6 +17,7 @@ package saker.std.main.dir.prepare;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.regex.Pattern;
 import saker.build.file.SakerFile;
 import saker.build.file.path.SakerPath;
 import saker.build.file.path.WildcardPath;
+import saker.build.file.provider.SakerPathFiles;
 import saker.build.task.CommonTaskContentDescriptors;
 import saker.build.task.TaskContext;
 import saker.build.task.TaskExecutionUtilities;
@@ -288,24 +290,28 @@ public interface RelativeContentsTaskOption {
 								@Override
 								public void visit(ExecutionFileLocation loc) {
 									SakerPath dirpath = loc.getPath();
+									Collection<FileCollectionStrategy> collectionstrats = new HashSet<>();
 									for (WildcardPath wc : wildcard) {
-										FileCollectionStrategy collectionstrategy = WildcardFileCollectionStrategy
-												.create(dirpath, wc);
-										TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
+										collectionstrats.add(WildcardFileCollectionStrategy.create(dirpath, wc));
+									}
+									TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
 
-										NavigableMap<SakerPath, SakerFile> files = taskutils
-												.collectFilesReportAdditionDependency(wildcarddependencytag,
-														collectionstrategy);
-										taskutils.reportInputFileDependency(wildcarddependencytag,
-												ObjectUtils.singleValueMap(files.navigableKeySet(),
-														CommonTaskContentDescriptors.PRESENT));
+									NavigableMap<SakerPath, SakerFile> files = taskutils
+											.collectFilesReportAdditionDependency(wildcarddependencytag,
+													collectionstrats);
+									taskutils.reportInputFileDependency(wildcarddependencytag,
+											ObjectUtils.singleValueMap(files.navigableKeySet(),
+													CommonTaskContentDescriptors.PRESENT));
 
-										for (SakerPath filepath : files.navigableKeySet()) {
-											SakerPath relative = dirpath.relativize(filepath);
-											visitComplex(ExecutionFileLocation.create(filepath), relative, remapentries,
-													targetdir);
+									//only include children that are UNDER the relative directory
+									//don't include the directory itself as that has no file name
+									//and would only cause an exception down the line
+									for (SakerPath filepath : SakerPathFiles
+											.getPathSubSetDirectoryChildren(files.navigableKeySet(), dirpath, false)) {
+										SakerPath relative = dirpath.relativize(filepath);
+										visitComplex(ExecutionFileLocation.create(filepath), relative, remapentries,
+												targetdir);
 
-										}
 									}
 								}
 							});
