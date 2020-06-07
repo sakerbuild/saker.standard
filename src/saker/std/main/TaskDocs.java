@@ -23,6 +23,7 @@ import saker.nest.scriptinfo.reflection.annot.NestFieldInformation;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTypeInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
+import saker.std.api.dir.prepare.PrepareDirectoryWorkerTaskOutput;
 import saker.std.main.file.copy.CopyFileTaskFactory;
 import saker.std.main.file.location.LocalFileLocationTaskFactory;
 
@@ -119,5 +120,22 @@ public class TaskDocs {
 	@NestTypeInformation(qualifiedName = "PatternReplacement")
 	@NestInformation("Represents a replacement expression to be used together with a regular expression.")
 	public static class DocPatternReplacement {
+	}
+
+	@NestTypeInformation(qualifiedName = "PatternReplacement")
+	@NestFieldInformation(value = "OutputPath",
+			type = @NestTypeUsage(SakerPath.class),
+			info = @NestInformation("Path to the prepared directory output."))
+	@NestFieldInformation(value = "FilePaths",
+			type = @NestTypeUsage(value = Collection.class, elementTypes = { SakerPath.class }),
+			info = @NestInformation("Set of paths that to the output files in the prepared directory.\n"
+					+ "The set only contains paths to the files in the directory, not to any directories that were placed in it.\n"
+					+ "Use the Paths field to retrieve the paths set to all files and directories in the output directory."))
+	@NestFieldInformation(value = "Paths",
+			type = @NestTypeUsage(value = Collection.class, elementTypes = { SakerPath.class }),
+			info = @NestInformation("Set of paths that to the output files and directories in the prepared directory.\n"
+					+ "The set only contains paths to all the files and directories in the output directory.\n"
+					+ "Use FilePaths to get the paths to only the files but not the directories."))
+	public static class DocPrepareDirectoryWorkerTaskOutput {
 	}
 }

@@ -35,12 +35,24 @@ public interface PrepareDirectoryWorkerTaskOutput {
 	 * 
 	 * @return The absolute execution path.
 	 */
-	public SakerPath getPath();
+	public SakerPath getOutputPath();
 
 	/**
 	 * Gets the set of file paths that are placed in the output directory.
+	 * <p>
+	 * <b>Note</b> that the result contains the paths only to the output files, but not the directories. Use
+	 * {@link #getPaths()} if you want the paths to all output files and directories.
 	 * 
 	 * @return A set of absolute execution paths of the files.
 	 */
-	public NavigableSet<SakerPath> getFiles();
+	public NavigableSet<SakerPath> getFilePaths();
+
+	/**
+	 * Gets the set of paths for the output files and directories.
+	 * <p>
+	 * The returned set contains the paths to all files and directories placed in the output directory.
+	 * 
+	 * @return A set of absolute execution paths.
+	 */
+	public NavigableSet<SakerPath> getPaths();
 }

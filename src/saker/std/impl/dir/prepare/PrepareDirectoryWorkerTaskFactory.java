@@ -46,6 +46,7 @@ import saker.build.task.TaskExecutionUtilities;
 import saker.build.task.TaskFactory;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.task.utils.dependencies.RecursiveFileCollectionStrategy;
+import saker.build.thirdparty.saker.util.ImmutableUtils;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
 import saker.build.trace.BuildTrace;
@@ -72,6 +73,11 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 	public PrepareDirectoryWorkerTaskFactory(NavigableMap<SakerPath, FileLocation> inputs, boolean clearDirectory) {
 		this.inputs = inputs;
 		this.clearDirectory = clearDirectory;
+	}
+
+	@Override
+	public int getRequestedComputationTokenCount() {
+		return 1;
 	}
 
 	@Override
@@ -130,6 +136,7 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 
 		outputfilecontents.put(outputdirpath, DirectoryContentDescriptor.INSTANCE);
 
+		NavigableSet<SakerPath> outputpaths = new TreeSet<>();
 		NavigableSet<SakerPath> outputfilepaths = new TreeSet<>();
 
 		UUID taskuuid = UUID.randomUUID();
@@ -159,7 +166,7 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 			}
 			SakerDirectory fparentdir = parentdir;
 			SakerPath entryoutpath = outputdirpath.resolve(entrypath);
-			outputfilepaths.add(entryoutpath);
+			outputpaths.add(entryoutpath);
 			entry.getValue().accept(new FileLocationVisitor() {
 				@Override
 				public void visit(LocalFileLocation loc) {
@@ -181,6 +188,7 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 										"File hierarchy was concurrently modified at " + loc);
 							}
 							fparentdir.add(newfile);
+							outputfilepaths.add(entryoutpath);
 						} catch (Exception e) {
 							throw ObjectUtils.sneakyThrow(e);
 						}
@@ -200,6 +208,7 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 					if (f instanceof SakerDirectory) {
 						fparentdir.getDirectoryCreate(entryfilename);
 					} else {
+						outputfilepaths.add(entryoutpath);
 						fparentdir.add(new DelegateSakerFile(entryfilename, f));
 					}
 					outputfilecontents.put(entryoutpath, cd);
@@ -217,7 +226,8 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 		outputdir.synchronize();
 
 		PrepareDirectoryWorkerTaskOutputImpl result = new PrepareDirectoryWorkerTaskOutputImpl(outputdirpath,
-				outputfilepaths);
+				ImmutableUtils.makeImmutableNavigableSet(outputpaths),
+				ImmutableUtils.makeImmutableNavigableSet(outputfilepaths));
 		taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
 		return result;
 	}

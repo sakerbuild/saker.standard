@@ -31,6 +31,7 @@ final class PrepareDirectoryWorkerTaskOutputImpl implements PrepareDirectoryWork
 	private static final long serialVersionUID = 1L;
 
 	private SakerPath outputDirPath;
+	private NavigableSet<SakerPath> paths;
 	private NavigableSet<SakerPath> outputFilePaths;
 
 	/**
@@ -39,24 +40,31 @@ final class PrepareDirectoryWorkerTaskOutputImpl implements PrepareDirectoryWork
 	public PrepareDirectoryWorkerTaskOutputImpl() {
 	}
 
-	public PrepareDirectoryWorkerTaskOutputImpl(SakerPath outputDirPath, NavigableSet<SakerPath> outputFilePaths) {
+	public PrepareDirectoryWorkerTaskOutputImpl(SakerPath outputDirPath, NavigableSet<SakerPath> paths,
+			NavigableSet<SakerPath> outputFilePaths) {
 		this.outputDirPath = outputDirPath;
+		this.paths = paths;
 		this.outputFilePaths = outputFilePaths;
 	}
 
 	@Override
-	public SakerPath getPath() {
+	public SakerPath getOutputPath() {
 		return outputDirPath;
 	}
 
 	@Override
-	public NavigableSet<SakerPath> getFiles() {
+	public NavigableSet<SakerPath> getFilePaths() {
 		return outputFilePaths;
+	}
+
+	@Override
+	public NavigableSet<SakerPath> getPaths() {
+		return paths;
 	}
 
 	//for conversion compatibility
 	public SakerPath toSakerPath() {
-		return getPath();
+		return getOutputPath();
 	}
 
 	//for conversion compatibility
@@ -72,12 +80,14 @@ final class PrepareDirectoryWorkerTaskOutputImpl implements PrepareDirectoryWork
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(outputDirPath);
+		SerialUtils.writeExternalCollection(out, paths);
 		SerialUtils.writeExternalCollection(out, outputFilePaths);
 	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		outputDirPath = SerialUtils.readExternalObject(in);
+		paths = SerialUtils.readExternalSortedImmutableNavigableSet(in);
 		outputFilePaths = SerialUtils.readExternalSortedImmutableNavigableSet(in);
 	}
 
@@ -86,7 +96,6 @@ final class PrepareDirectoryWorkerTaskOutputImpl implements PrepareDirectoryWork
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((outputDirPath == null) ? 0 : outputDirPath.hashCode());
-		result = prime * result + ((outputFilePaths == null) ? 0 : outputFilePaths.hashCode());
 		return result;
 	}
 
@@ -108,6 +117,11 @@ final class PrepareDirectoryWorkerTaskOutputImpl implements PrepareDirectoryWork
 			if (other.outputFilePaths != null)
 				return false;
 		} else if (!outputFilePaths.equals(other.outputFilePaths))
+			return false;
+		if (paths == null) {
+			if (other.paths != null)
+				return false;
+		} else if (!paths.equals(other.paths))
 			return false;
 		return true;
 	}

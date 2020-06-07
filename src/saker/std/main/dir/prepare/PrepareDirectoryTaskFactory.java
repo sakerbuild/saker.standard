@@ -30,11 +30,13 @@ import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.trace.BuildTrace;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
 import saker.nest.utils.FrontendTaskFactory;
 import saker.std.api.file.location.FileLocation;
 import saker.std.impl.dir.prepare.PrepareDirectoryWorkerTaskFactory;
 import saker.std.impl.dir.prepare.PrepareDirectoryWorkerTaskIdentifier;
+import saker.std.main.TaskDocs.DocPrepareDirectoryWorkerTaskOutput;
 import saker.std.main.file.utils.TaskOptionUtils;
 
 @NestInformation("Prepares the contents of a directory with the specified files.\n"
@@ -43,6 +45,8 @@ import saker.std.main.file.utils.TaskOptionUtils;
 		+ "The task can be used to prepare/create the application output hierarchy and allows testing, packaging, and other "
 		+ "operations to be performed later.\n"
 		+ "The ClearDirectory parameter can be used to control how existing files should be handled in case of incremental builds..")
+@NestTaskInformation(returnType = @NestTypeUsage(DocPrepareDirectoryWorkerTaskOutput.class))
+
 @NestParameterInformation(value = "Contents",
 		aliases = { "" },
 		required = true,
