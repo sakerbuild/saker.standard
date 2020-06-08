@@ -23,7 +23,6 @@ import saker.nest.scriptinfo.reflection.annot.NestFieldInformation;
 import saker.nest.scriptinfo.reflection.annot.NestInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTypeInformation;
 import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
-import saker.std.api.dir.prepare.PrepareDirectoryWorkerTaskOutput;
 import saker.std.main.file.copy.CopyFileTaskFactory;
 import saker.std.main.file.location.LocalFileLocationTaskFactory;
 
@@ -128,13 +127,14 @@ public class TaskDocs {
 			info = @NestInformation("Path to the prepared directory output."))
 	@NestFieldInformation(value = "FilePaths",
 			type = @NestTypeUsage(value = Collection.class, elementTypes = { SakerPath.class }),
-			info = @NestInformation("Set of paths that to the output files in the prepared directory.\n"
-					+ "The set only contains paths to the files in the directory, not to any directories that were placed in it.\n"
-					+ "Use the Paths field to retrieve the paths set to all files and directories in the output directory."))
+			info = @NestInformation("Path collection of the output files in the prepared directory.\n"
+					+ "The collection contains paths to the files in the prepared directory that has a corresponding input, "
+					+ "but not to the directories that are present in it.\n"
+					+ "Use the Paths field to retrieve the paths collection to all files and directories in the output directory."))
 	@NestFieldInformation(value = "Paths",
 			type = @NestTypeUsage(value = Collection.class, elementTypes = { SakerPath.class }),
-			info = @NestInformation("Set of paths that to the output files and directories in the prepared directory.\n"
-					+ "The set only contains paths to all the files and directories in the output directory.\n"
+			info = @NestInformation("Path collection of the output files and directories in the prepared directory.\n"
+					+ "The collection contains paths to all the files and directories in the output directory that has a corresponding input.\n"
 					+ "Use FilePaths to get the paths to only the files but not the directories."))
 	public static class DocPrepareDirectoryWorkerTaskOutput {
 	}

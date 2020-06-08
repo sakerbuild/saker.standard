@@ -92,7 +92,8 @@ import saker.std.main.file.utils.TaskOptionUtils;
 				+ "The keys of the Remap field are regular expressions that are matched against the output relative path of a file. "
 				+ "The paths which are matched don't have the TargetDirectory value prepended to them.\n"
 				+ "The values of the Remap field are replacement expressions that are applied to the matched paths.\n"
-				+ "The pattern matching and replacement works the same way as the Java Pattern class."))
+				+ "The pattern matching and replacement works the same way as the Java Pattern class.\n"
+				+ "If the remapped path replacement results in empty string then the corresponding file will be omitted."))
 //since 0.8.4
 public interface RelativeContentsTaskOption {
 	public default RelativeContentsTaskOption clone() {
@@ -216,173 +217,172 @@ public interface RelativeContentsTaskOption {
 
 	public static NavigableMap<SakerPath, FileLocation> toInputMap(TaskContext taskcontext,
 			Iterable<? extends RelativeContentsTaskOption> contents, Object wildcarddependencytag) {
+		if (contents == null) {
+			return null;
+		}
 		NavigableMap<SakerPath, FileLocation> inputs = new TreeMap<>();
+		RelativeContentsTaskOption.Visitor tovisitor = new RelativeContentsTaskOption.Visitor() {
+			@Override
+			public void visit(FileCollection files) {
+				for (FileLocation f : files) {
+					visitFileLocation(f);
+				}
+			}
+
+			@Override
+			public void visit(WildcardPath wildcard) {
+				for (FileLocation fl : TaskOptionUtils.toFileLocations(MultiFileLocationTaskOption.valueOf(wildcard),
+						taskcontext, wildcarddependencytag)) {
+					visitFileLocation(fl);
+				}
+			}
+
+			@Override
+			public void visit(SakerPath path) {
+				visitExecutionFile(taskcontext.getTaskWorkingDirectoryPath().tryResolve(path));
+			}
+
+			@Override
+			public void visit(RelativeContentsTaskOption input) {
+				SakerPath targetdir = ObjectUtils.nullDefault(input.getTargetDirectory(), SakerPath.EMPTY);
+				if (targetdir != null && !targetdir.isForwardRelative()) {
+					throw new IllegalArgumentException("TargetDirectory must be a forward relative path: " + targetdir);
+				}
+				Map<String, String> remap = input.getRemap();
+				List<Entry<Pattern, String>> remapentries;
+				if (!ObjectUtils.isNullOrEmpty(remap)) {
+					remapentries = new ArrayList<>();
+					for (Entry<String, String> entry : remap.entrySet()) {
+						remapentries.add(ImmutableUtils.makeImmutableMapEntry(Pattern.compile(entry.getKey()),
+								entry.getValue()));
+					}
+				} else {
+					remapentries = null;
+				}
+				Collection<FileLocation> files = TaskOptionUtils.toFileLocations(input.getFiles(), taskcontext,
+						wildcarddependencytag);
+				Collection<FileLocation> directory = TaskOptionUtils.toFileLocations(input.getDirectory(), taskcontext,
+						wildcarddependencytag);
+				Collection<WildcardPath> wildcard = input.getWildcard();
+				if (files != null) {
+					if (directory != null || wildcard != null) {
+						throw new IllegalArgumentException("Files cannot be used together with Directory or Wildcard.");
+					}
+					for (FileLocation f : files) {
+						visitComplex(f, SakerPath.valueOf(SakerStandardUtils.getFileLocationFileName(f)), remapentries,
+								targetdir);
+					}
+				} else {
+					if (wildcard == null) {
+						throw new IllegalArgumentException("No inputs specified. Wildcard or Files property missing.");
+					}
+					if (directory == null) {
+						directory = ImmutableUtils
+								.singletonSet(ExecutionFileLocation.create(taskcontext.getTaskWorkingDirectoryPath()));
+					}
+					FileLocationVisitor dirflvisitor = new FileLocationVisitor() {
+						//TODO support local file locations
+
+						@Override
+						public void visit(ExecutionFileLocation loc) {
+							SakerPath dirpath = loc.getPath();
+							Collection<FileCollectionStrategy> collectionstrats = new HashSet<>();
+							for (WildcardPath wc : wildcard) {
+								collectionstrats.add(WildcardFileCollectionStrategy.create(dirpath, wc));
+							}
+							TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
+
+							NavigableMap<SakerPath, SakerFile> files = taskutils
+									.collectFilesReportAdditionDependency(wildcarddependencytag, collectionstrats);
+							taskutils.reportInputFileDependency(wildcarddependencytag, ObjectUtils
+									.singleValueMap(files.navigableKeySet(), CommonTaskContentDescriptors.PRESENT));
+
+							//only include children that are UNDER the relative directory
+							//don't include the directory itself as that has no file name
+							//and would only cause an exception down the line
+							for (SakerPath filepath : SakerPathFiles
+									.getPathSubSetDirectoryChildren(files.navigableKeySet(), dirpath, false)) {
+								SakerPath relative = dirpath.relativize(filepath);
+								visitComplex(ExecutionFileLocation.create(filepath), relative, remapentries, targetdir);
+
+							}
+						}
+					};
+					for (FileLocation dir : directory) {
+						dir.accept(dirflvisitor);
+					}
+				}
+			}
+
+			private void visitComplex(FileLocation f, SakerPath basepath, List<Entry<Pattern, String>> remapentries,
+					SakerPath targetdir) {
+				if (remapentries != null) {
+					String basepathstr = basepath.toString();
+					for (Entry<Pattern, String> remapentry : remapentries) {
+						Matcher matcher = remapentry.getKey().matcher(basepathstr);
+						if (matcher.matches()) {
+							String replaced = null;
+							try {
+								replaced = matcher.replaceFirst(remapentry.getValue());
+								if (ObjectUtils.isNullOrEmpty(replaced)) {
+									//remapped to empty. this signals to exclude
+									return;
+								}
+								basepath = SakerPath.valueOf(replaced);
+							} catch (Exception e) {
+								throw new IllegalArgumentException("Failed to perform Remapping of entry: " + basepath
+										+ " with pattern: " + remapentry.getKey().pattern() + " and replacement: "
+										+ remapentry.getValue() + (replaced == null ? "" : " and result: " + replaced),
+										e);
+							}
+							if (!basepath.isForwardRelative()) {
+								throw new IllegalArgumentException(
+										"Remapped path is not forward relative: " + basepath);
+							}
+							if (basepath.getFileName() == null) {
+								throw new IllegalArgumentException("Remapped path has no file name: " + basepath);
+							}
+							break;
+						}
+					}
+				}
+				SakerPath path;
+				if (targetdir != null) {
+					path = targetdir.resolve(basepath);
+				} else {
+					path = basepath;
+				}
+				putInput(path, f);
+			}
+
+			private void visitFileLocation(FileLocation f) {
+				SakerPath path = SakerPath.valueOf(SakerStandardUtils.getFileLocationFileName(f));
+				FileLocation prev = inputs.putIfAbsent(path, f);
+				if (prev != null) {
+					throw new IllegalArgumentException(
+							"Duplicate entries for path: " + path + " with " + prev + " and " + f);
+				}
+			}
+
+			private void visitExecutionFile(SakerPath inpath) {
+				SakerPath path = SakerPath.valueOf(inpath.getFileName());
+				ExecutionFileLocation f = ExecutionFileLocation.create(inpath);
+				putInput(path, f);
+			}
+
+			private void putInput(SakerPath path, FileLocation f) {
+				FileLocation prev = inputs.putIfAbsent(path, f);
+				if (prev != null) {
+					throw new IllegalArgumentException(
+							"Duplicate entries for path: " + path + " with " + prev + " and " + f);
+				}
+			}
+		};
 		for (RelativeContentsTaskOption contentoption : contents) {
 			if (contentoption == null) {
 				continue;
 			}
-			contentoption.accept(new RelativeContentsTaskOption.Visitor() {
-				@Override
-				public void visit(FileCollection files) {
-					for (FileLocation f : files) {
-						visitFileLocation(f);
-					}
-				}
-
-				@Override
-				public void visit(WildcardPath wildcard) {
-					for (FileLocation fl : TaskOptionUtils.toFileLocations(
-							MultiFileLocationTaskOption.valueOf(wildcard), taskcontext, wildcarddependencytag)) {
-						visitFileLocation(fl);
-					}
-				}
-
-				@Override
-				public void visit(SakerPath path) {
-					visitExecutionFile(taskcontext.getTaskWorkingDirectoryPath().tryResolve(path));
-				}
-
-				@Override
-				public void visit(RelativeContentsTaskOption input) {
-					SakerPath targetdir = ObjectUtils.nullDefault(input.getTargetDirectory(), SakerPath.EMPTY);
-					if (targetdir != null && !targetdir.isForwardRelative()) {
-						throw new IllegalArgumentException(
-								"TargetDirectory must be a forward relative path: " + targetdir);
-					}
-					Map<String, String> remap = input.getRemap();
-					List<Entry<Pattern, String>> remapentries;
-					if (!ObjectUtils.isNullOrEmpty(remap)) {
-						remapentries = new ArrayList<>();
-						for (Entry<String, String> entry : remap.entrySet()) {
-							remapentries.add(ImmutableUtils.makeImmutableMapEntry(Pattern.compile(entry.getKey()),
-									entry.getValue()));
-						}
-					} else {
-						remapentries = null;
-					}
-					Collection<FileLocation> files = TaskOptionUtils.toFileLocations(input.getFiles(), taskcontext,
-							wildcarddependencytag);
-					Collection<FileLocation> directory = TaskOptionUtils.toFileLocations(input.getDirectory(),
-							taskcontext, wildcarddependencytag);
-					Collection<WildcardPath> wildcard = input.getWildcard();
-					if (files != null) {
-						if (directory != null || wildcard != null) {
-							throw new IllegalArgumentException(
-									"Files cannot be used together with Directory or Wildcard.");
-						}
-						for (FileLocation f : files) {
-							visitComplex(f, SakerPath.valueOf(SakerStandardUtils.getFileLocationFileName(f)),
-									remapentries, targetdir);
-						}
-					} else {
-						if (wildcard == null) {
-							throw new IllegalArgumentException(
-									"No inputs specified. Wildcard or Files property missing.");
-						}
-						if (directory == null) {
-							directory = ImmutableUtils.singletonSet(
-									ExecutionFileLocation.create(taskcontext.getTaskWorkingDirectoryPath()));
-						}
-						for (FileLocation dir : directory) {
-							dir.accept(new FileLocationVisitor() {
-								//TODO support local file locations
-
-								@Override
-								public void visit(ExecutionFileLocation loc) {
-									SakerPath dirpath = loc.getPath();
-									Collection<FileCollectionStrategy> collectionstrats = new HashSet<>();
-									for (WildcardPath wc : wildcard) {
-										collectionstrats.add(WildcardFileCollectionStrategy.create(dirpath, wc));
-									}
-									TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
-
-									NavigableMap<SakerPath, SakerFile> files = taskutils
-											.collectFilesReportAdditionDependency(wildcarddependencytag,
-													collectionstrats);
-									taskutils.reportInputFileDependency(wildcarddependencytag,
-											ObjectUtils.singleValueMap(files.navigableKeySet(),
-													CommonTaskContentDescriptors.PRESENT));
-
-									//only include children that are UNDER the relative directory
-									//don't include the directory itself as that has no file name
-									//and would only cause an exception down the line
-									for (SakerPath filepath : SakerPathFiles
-											.getPathSubSetDirectoryChildren(files.navigableKeySet(), dirpath, false)) {
-										SakerPath relative = dirpath.relativize(filepath);
-										visitComplex(ExecutionFileLocation.create(filepath), relative, remapentries,
-												targetdir);
-
-									}
-								}
-							});
-						}
-					}
-				}
-
-				private void visitComplex(FileLocation f, SakerPath basepath, List<Entry<Pattern, String>> remapentries,
-						SakerPath targetdir) {
-					if (remapentries != null) {
-						String basepathstr = basepath.toString();
-						for (Entry<Pattern, String> remapentry : remapentries) {
-							Matcher matcher = remapentry.getKey().matcher(basepathstr);
-							if (matcher.matches()) {
-								String replaced = null;
-								try {
-									replaced = matcher.replaceFirst(remapentry.getValue());
-									if (ObjectUtils.isNullOrEmpty(replaced)) {
-										//remapped to empty. this signals to exclude
-										return;
-									}
-									basepath = SakerPath.valueOf(replaced);
-								} catch (Exception e) {
-									throw new IllegalArgumentException("Failed to perform Remapping of entry: "
-											+ basepath + " with pattern: " + remapentry.getKey().pattern()
-											+ " and replacement: " + remapentry.getValue()
-											+ (replaced == null ? "" : " and result: " + replaced), e);
-								}
-								if (!basepath.isForwardRelative()) {
-									throw new IllegalArgumentException(
-											"Remapped path is not forward relative: " + basepath);
-								}
-								if (basepath.getFileName() == null) {
-									throw new IllegalArgumentException("Remapped path has no file name: " + basepath);
-								}
-								break;
-							}
-						}
-					}
-					SakerPath path;
-					if (targetdir != null) {
-						path = targetdir.resolve(basepath);
-					} else {
-						path = basepath;
-					}
-					putInput(path, f);
-				}
-
-				private void visitFileLocation(FileLocation f) {
-					SakerPath path = SakerPath.valueOf(SakerStandardUtils.getFileLocationFileName(f));
-					FileLocation prev = inputs.putIfAbsent(path, f);
-					if (prev != null) {
-						throw new IllegalArgumentException(
-								"Duplicate entries for path: " + path + " with " + prev + " and " + f);
-					}
-				}
-
-				private void visitExecutionFile(SakerPath inpath) {
-					SakerPath path = SakerPath.valueOf(inpath.getFileName());
-					ExecutionFileLocation f = ExecutionFileLocation.create(inpath);
-					putInput(path, f);
-				}
-
-				private void putInput(SakerPath path, FileLocation f) {
-					FileLocation prev = inputs.putIfAbsent(path, f);
-					if (prev != null) {
-						throw new IllegalArgumentException(
-								"Duplicate entries for path: " + path + " with " + prev + " and " + f);
-					}
-				}
-			});
+			contentoption.accept(tovisitor);
 		}
 		return inputs;
 	}

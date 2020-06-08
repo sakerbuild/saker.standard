@@ -1,4 +1,4 @@
-global(VERSION_saker.standard) = "0.8.3"
+global(VERSION_saker.standard) = "0.8.4"
 
 static(VERSION_saker.build) = nest.dependency.resolve(
 	saker.build,
@@ -21,6 +21,7 @@ compile(
 			]),
 		],
 		Identifier: main,
+		Parameters: [--release, 8],
 	)
 }
 export(
