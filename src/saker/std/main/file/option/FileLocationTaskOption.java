@@ -26,7 +26,8 @@ import saker.std.main.TaskDocs.DocExecutionFileLocation;
 import saker.std.main.TaskDocs.DocLocalFileLocation;
 
 @NestInformation("Represents a location of a file.\n"
-		+ "The file location may be either reference a file in the build execution file hierarchy, or the local file system.")
+		+ "The file location may either be a reference to a file in the build execution file hierarchy, "
+		+ "or the local file system.")
 @NestTypeInformation(relatedTypes = { @NestTypeUsage(kind = TypeInformationKind.PATH, value = SakerPath.class),
 		@NestTypeUsage(DocLocalFileLocation.class), @NestTypeUsage(DocExecutionFileLocation.class), })
 public interface FileLocationTaskOption {

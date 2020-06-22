@@ -96,7 +96,7 @@ public class PrepareDirectoryTaskFactory extends FrontendTaskFactory<Object> {
 					TaskOptionUtils.requireForwardRelativePathWithFileName(outputOption, "Output");
 					outputpath = SakerPath.valueOf(TASK_NAME).resolve(outputOption);
 				} else {
-					outputpath = SakerPath.valueOf(TASK_NAME + "/default");
+					outputpath = SakerPath.valueOf(TASK_NAME).resolve("default");
 				}
 				NavigableMap<SakerPath, FileLocation> inputs = RelativeContentsTaskOption.toInputMap(taskcontext,
 						contents, null);
