@@ -121,7 +121,7 @@ public class TaskDocs {
 	public static class DocPatternReplacement {
 	}
 
-	@NestTypeInformation(qualifiedName = "PatternReplacement")
+	@NestTypeInformation(qualifiedName = "PrepareDirectoryWorkerTaskOutput")
 	@NestInformation("Output of the directory preparation task.")
 	@NestFieldInformation(value = "OutputPath",
 			type = @NestTypeUsage(SakerPath.class),
