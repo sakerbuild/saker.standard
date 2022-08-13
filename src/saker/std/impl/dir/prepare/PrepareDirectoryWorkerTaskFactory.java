@@ -86,13 +86,12 @@ public class PrepareDirectoryWorkerTaskFactory implements TaskFactory<PrepareDir
 		SakerPath outpath = taskid.getOutputPath();
 		String stdoutid;
 		if (outpath.getNameCount() == 1) {
-			stdoutid = outpath.getFileName();
+			stdoutid = "prepare:" + outpath.getFileName();
 		} else {
 			stdoutid = outpath.getName(0) + ":" + outpath.getFileName();
 		}
 		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
 			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
-			BuildTrace.setDisplayInformation("prepare:" + outpath.getFileName(), stdoutid);
 		}
 		taskcontext.setStandardOutDisplayIdentifier(stdoutid);
 
