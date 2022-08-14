@@ -64,7 +64,12 @@ public class LocalFileLocationTaskFactory extends FrontendTaskFactory<FileLocati
 				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
 					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
 				}
-				if (path == null || !path.isAbsolute()) {
+				if (path == null) {
+					taskcontext.abortExecution(
+							new TaskParameterException("Path parameter is null", taskcontext.getTaskId()));
+					return null;
+				}
+				if (!path.isAbsolute()) {
 					taskcontext.abortExecution(
 							new TaskParameterException("Path must be absolute: " + path, taskcontext.getTaskId()));
 					return null;

@@ -13,14 +13,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package saker.std.main.file.mirror;
+package saker.std.main.file.type;
 
+import java.util.UUID;
+
+import saker.build.file.SakerDirectory;
+import saker.build.file.SakerFile;
 import saker.build.file.path.SakerPath;
+import saker.build.file.provider.FileEntry;
 import saker.build.runtime.execution.ExecutionContext;
+import saker.build.task.CommonTaskContentDescriptors;
 import saker.build.task.ParameterizableTask;
 import saker.build.task.TaskContext;
 import saker.build.task.exception.MissingRequiredParameterException;
-import saker.build.task.utils.SimpleStructuredObjectTaskResult;
 import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.trace.BuildTrace;
@@ -32,26 +37,25 @@ import saker.nest.utils.FrontendTaskFactory;
 import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileLocationVisitor;
 import saker.std.api.file.location.LocalFileLocation;
-import saker.std.impl.file.mirror.MirroringTaskFactory;
+import saker.std.impl.file.property.TaggedLocalFileTypeExecutionProperty;
+import saker.std.main.TaskDocs.DocFileTypeTaskOutput;
 import saker.std.main.file.option.FileLocationTaskOption;
 import saker.std.main.file.utils.TaskOptionUtils;
 
-@NestTaskInformation(returnType = @NestTypeUsage(SakerPath.class))
-@NestInformation(value = "Mirrors a file at the given path to the local file system.\n"
-		+ "The task may throw an exception if the mirror directory is not available.\n"
-		+ "The task may throw an exception if a file doesn't exist at the given path.\n"
-		+ "The Path argument may denote a file or directory.\n"
-		+ "The task returns the local file system path to the mirrored file.")
+@NestTaskInformation(returnType = @NestTypeUsage(DocFileTypeTaskOutput.class))
+@NestInformation("Gets information about the type of a file.\n"
+		+ "The task will query the file system for the file at the given file location "
+		+ "and returns an object containing information about its type.\n"
+		+ "In case information about a local file is queried, symbolic links will be followed.")
 @NestParameterInformation(value = "Path",
 		aliases = "",
-		info = @NestInformation("The file location to mirror.\n"
-				+ "It should be a valid path for the current build execution or be a local file location."),
+		required = true,
 		type = @NestTypeUsage(FileLocationTaskOption.class),
-		required = true)
-public class MirrorFileTaskFactory extends FrontendTaskFactory<Object> {
+		info = @NestInformation("The path or file location of the file that should be queried."))
+public class FileTypeTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;
 
-	public static final String TASK_NAME = "std.file.mirror";
+	public static final String TASK_NAME = "std.file.type";
 
 	@Override
 	public ParameterizableTask<? extends Object> createTask(ExecutionContext executioncontext) {
@@ -62,28 +66,42 @@ public class MirrorFileTaskFactory extends FrontendTaskFactory<Object> {
 			@Override
 			public Object run(TaskContext taskcontext) throws Exception {
 				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
-					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_FRONTEND);
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_META);
 				}
 				if (location == null) {
 					taskcontext.abortExecution(new MissingRequiredParameterException(
 							"Path parameter is null for " + TASK_NAME, taskcontext.getTaskId()));
 					return null;
 				}
-
 				Object[] result = { null };
 				TaskOptionUtils.visitFileLocation(location, taskcontext, new FileLocationVisitor() {
 					@Override
 					public void visit(ExecutionFileLocation loc) {
-						MirroringTaskFactory backendtask = new MirroringTaskFactory(loc.getPath());
-						taskcontext.startTask(backendtask, backendtask, null);
-
-						result[0] = new SimpleStructuredObjectTaskResult(backendtask);
+						SakerPath path = loc.getPath();
+						SakerFile foundfile = taskcontext.getTaskUtilities().resolveAtPath(path);
+						if (foundfile == null) {
+							taskcontext.reportInputFileDependency(null, path, CommonTaskContentDescriptors.NOT_PRESENT);
+							result[0] = new FileTypeTaskOutput(loc, FileEntry.TYPE_NULL);
+						} else if (foundfile instanceof SakerDirectory) {
+							taskcontext.reportInputFileDependency(null, path,
+									CommonTaskContentDescriptors.IS_DIRECTORY);
+							result[0] = new FileTypeTaskOutput(loc, FileEntry.TYPE_DIRECTORY);
+						} else {
+							taskcontext.reportInputFileDependency(null, path, CommonTaskContentDescriptors.IS_FILE);
+							result[0] = new FileTypeTaskOutput(loc, FileEntry.TYPE_FILE);
+						}
 					}
 
 					@Override
 					public void visit(LocalFileLocation loc) {
-						//no need to mirror, already a local path
-						result[0] = loc.getLocalPath();
+						UUID taskuuid = UUID.randomUUID();
+						Integer filetype = taskcontext.getTaskUtilities().getReportExecutionDependency(
+								TaggedLocalFileTypeExecutionProperty.create(loc.getLocalPath(), taskuuid));
+						if (filetype == null) {
+							result[0] = new FileTypeTaskOutput(loc, FileEntry.TYPE_NULL);
+						} else {
+							result[0] = new FileTypeTaskOutput(loc, filetype);
+						}
 					}
 				});
 				taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result[0]));
@@ -91,4 +109,5 @@ public class MirrorFileTaskFactory extends FrontendTaskFactory<Object> {
 			}
 		};
 	}
+
 }

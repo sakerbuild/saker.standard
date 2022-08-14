@@ -1,0 +1,14 @@
+exectest(
+	out res = std.file.type(test.exec.path())
+	out ex = $res[Exists]
+	out rf = $res[RegularFile]
+	out dir = $res[Directory]
+){
+}
+localtest(
+	out res = std.file.type(std.file.local(test.local.path()))
+	out ex = $res[Exists]
+	out rf = $res[RegularFile]
+	out dir = $res[Directory]
+){
+}

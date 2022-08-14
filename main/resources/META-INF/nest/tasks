@@ -5,6 +5,7 @@ std.file.copy=saker.std.main.file.copy.CopyFileTaskFactory
 std.file.local=saker.std.main.file.location.LocalFileLocationTaskFactory
 std.file.place=saker.std.main.file.place.FilePlaceTaskFactory
 std.file.put=saker.std.main.file.put.PutFileTaskFactory
+std.file.type=saker.std.main.file.type.FileTypeTaskFactory
 std.file.wildcard=saker.std.main.file.wildcard.WildcardFileTaskFactory
 std.file.wildcard.local=saker.std.main.file.wildcard.LocalWildcardFileTaskFactory
 std.param.env=saker.std.main.param.EnvironmentParameterTaskFactory

@@ -137,7 +137,7 @@ public class CopyFileTaskFactory extends FrontendTaskFactory<Object> {
 		if (location == null) {
 			return;
 		}
-		TaskOptionUtils.toFileLocation(location, taskcontext).accept(new FileLocationVisitor() {
+		TaskOptionUtils.visitFileLocation(location, taskcontext, new FileLocationVisitor() {
 			@Override
 			public void visit(ExecutionFileLocation loc) {
 				if (loc.getPath() == null) {

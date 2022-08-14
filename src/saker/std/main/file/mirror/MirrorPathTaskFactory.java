@@ -66,7 +66,7 @@ public class MirrorPathTaskFactory extends FrontendTaskFactory<SakerPath> {
 				}
 
 				SakerPath[] result = { null };
-				TaskOptionUtils.toFileLocation(location, taskcontext).accept(new FileLocationVisitor() {
+				TaskOptionUtils.visitFileLocation(location, taskcontext, new FileLocationVisitor() {
 					@Override
 					public void visit(ExecutionFileLocation loc) {
 						result[0] = SakerPath.valueOf(executioncontext.toMirrorPath(loc.getPath()));

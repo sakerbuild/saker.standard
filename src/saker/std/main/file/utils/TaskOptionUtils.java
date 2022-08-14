@@ -32,6 +32,7 @@ import saker.build.task.utils.dependencies.WildcardFileCollectionStrategy;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileLocation;
+import saker.std.api.file.location.FileLocationVisitor;
 import saker.std.main.file.option.FileLocationTaskOption;
 import saker.std.main.file.option.MultiFileLocationTaskOption;
 
@@ -57,6 +58,21 @@ public class TaskOptionUtils {
 			}
 		});
 		return result[0];
+	}
+
+	public static void visitFileLocation(FileLocationTaskOption taskoption, TaskContext taskcontext,
+			FileLocationVisitor visitor) throws NullPointerException {
+		taskoption.accept(new FileLocationTaskOption.Visitor() {
+			@Override
+			public void visitRelativePath(SakerPath path) {
+				ExecutionFileLocation.create(taskcontext.getTaskWorkingDirectoryPath().resolve(path)).accept(visitor);
+			}
+
+			@Override
+			public void visitFileLocation(FileLocation location) {
+				location.accept(visitor);
+			}
+		});
 	}
 
 	public static Collection<FileLocation> toFileLocations(MultiFileLocationTaskOption taskoption,

@@ -139,4 +139,21 @@ public class TaskDocs {
 					+ "Use FilePaths to get the paths to only the files but not the directories."))
 	public static class DocPrepareDirectoryWorkerTaskOutput {
 	}
+
+	@NestTypeInformation(qualifiedName = "FileTypeTaskOutput")
+	@NestInformation("Contains information about the type of a file.")
+	@NestFieldInformation(value = "Exists",
+			type = @NestTypeUsage(boolean.class),
+			info = @NestInformation("Boolean set when the file at the given location exists."))
+	@NestFieldInformation(value = "Directory",
+			type = @NestTypeUsage(boolean.class),
+			info = @NestInformation("Boolean set when the file at the given location is a directory."))
+	@NestFieldInformation(value = "RegularFile",
+			type = @NestTypeUsage(boolean.class),
+			info = @NestInformation("Boolean set when the file at the given location is a regular file."))
+	@NestFieldInformation(value = "FileLocation",
+			type = @NestTypeUsage(DocFileLocation.class),
+			info = @NestInformation("The location of the file of which the type was queried."))
+	public static class DocFileTypeTaskOutput {
+	}
 }
