@@ -3,7 +3,6 @@
 /bin/
 /.classpath
 /test/resources/testbuilds/
-/secret/**
-!/secret/readme.md
 /.project
 /.saker.build.ideconfigs
+/maintainer-private/
