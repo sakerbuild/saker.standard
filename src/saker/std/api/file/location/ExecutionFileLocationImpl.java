@@ -19,11 +19,18 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Objects;
 
 import saker.build.file.path.SakerPath;
+import saker.build.thirdparty.saker.util.ObjectUtils;
+import saker.build.util.data.annotation.ValueType;
 
-class ExecutionFileLocationImpl implements FileLocation, Externalizable, ExecutionFileLocation {
+@ValueType
+final class ExecutionFileLocationImpl
+		implements ExecutionFileLocation, Externalizable, Comparable<ExecutionFileLocationImpl> {
 	private static final long serialVersionUID = 1L;
+
+	private static final int TYPE_HASH = ExecutionFileLocationImpl.class.hashCode();
 
 	private SakerPath path;
 
@@ -66,11 +73,14 @@ class ExecutionFileLocationImpl implements FileLocation, Externalizable, Executi
 	}
 
 	@Override
+	public int compareTo(ExecutionFileLocationImpl o) {
+		//paths shouldn't be null, but just in case
+		return ObjectUtils.compareNullsFirst(this.path, o.path);
+	}
+
+	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
-		return result;
+		return 31 * TYPE_HASH + Objects.hashCode(path);
 	}
 
 	@Override

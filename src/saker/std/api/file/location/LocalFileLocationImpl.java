@@ -19,11 +19,17 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Objects;
 
 import saker.build.file.path.SakerPath;
+import saker.build.thirdparty.saker.util.ObjectUtils;
+import saker.build.util.data.annotation.ValueType;
 
-class LocalFileLocationImpl implements FileLocation, Externalizable, LocalFileLocation {
+@ValueType
+final class LocalFileLocationImpl implements LocalFileLocation, Externalizable, Comparable<LocalFileLocationImpl> {
 	private static final long serialVersionUID = 1L;
+
+	private static final int TYPE_HASH = LocalFileLocationImpl.class.hashCode();
 
 	private SakerPath path;
 
@@ -59,11 +65,14 @@ class LocalFileLocationImpl implements FileLocation, Externalizable, LocalFileLo
 	}
 
 	@Override
+	public int compareTo(LocalFileLocationImpl o) {
+		//paths shouldn't be null, but just in case
+		return ObjectUtils.compareNullsFirst(this.path, o.path);
+	}
+
+	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
-		return result;
+		return 31 * TYPE_HASH + Objects.hashCode(path);
 	}
 
 	@Override
@@ -87,4 +96,5 @@ class LocalFileLocationImpl implements FileLocation, Externalizable, LocalFileLo
 	public String toString() {
 		return getClass().getSimpleName() + "[path=" + path + "]";
 	}
+
 }
