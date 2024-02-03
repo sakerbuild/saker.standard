@@ -47,7 +47,7 @@ import saker.std.main.file.utils.TaskOptionUtils;
 		required = true,
 		type = @NestTypeUsage(FileLocationTaskOption.class),
 		info = @NestInformation("Specifies the location where the file contents should be written to.\n"
-				+ "The localtion may be an execution path or local file location."))
+				+ "The location may be an execution path or local file location."))
 @NestParameterInformation(value = "Content",
 		aliases = "Contents",
 		required = true,
